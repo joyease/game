@@ -3,45 +3,45 @@
 <head>
 <meta charset="UTF-8" />
 <title>OpenStreetMap 座標點逐點顯示示範</title>
-
+<!-- 新增meta viewport -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-
 <style>
+  /* 讓地圖寬高自適應手機螢幕 */
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
   #map {
-    width: 800px;
-    height: 600px;
+    width: 100vw;      /* 100% 視窗寬度 */
+    height: 100vh;     /* 100% 視窗高度 */
+    max-width: 100%;
+    max-height: 100%;
   }
 </style>
 </head>
 <body>
 <h3>金門-小金門-大膽島</h3>
 <div id="map"></div>
-
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 const jsonUrl = 'https://raw.githubusercontent.com/joyease/game/main/2506Kimen.json';
-
-const map = L.map('map').setView([24.3, 118.2], 4);
+const map = L.map('map').setView([24.3, 118.3], 5);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
-
 fetch(jsonUrl)
 .then(response => response.json())
 .then(data => {
   const latlngs = [];
-  let prevLatLng = null;
   let index = 0;
-
   map.fitBounds(L.latLngBounds(data.map(p => [p.Latitude, p.Longitude])));
-
   function addNextPoint() {
     if (index >= data.length) return;
     const point = data[index];
     const latLng = [point.Latitude, point.Longitude];
     latlngs.push(latLng);
-
-    // 加點
     const circleMarker = L.circleMarker(latLng, {
       radius: 5,
       fillColor: 'darkblue',
@@ -50,8 +50,6 @@ fetch(jsonUrl)
       fillOpacity: 0.8
     }).addTo(map);
     circleMarker.bindPopup(`<b>地點:</b> ${point.Location}<br><b>日期:</b> ${point.Date}`);
-
-    // 加線
     if (latlngs.length > 1) {
       const line = L.polyline([latlngs[latlngs.length-2], latlngs[latlngs.length-1]], {
         color: 'blue',
@@ -59,11 +57,9 @@ fetch(jsonUrl)
         dashArray: '5, 10'
       }).addTo(map);
     }
-
     index++;
-    setTimeout(addNextPoint, 300); // 300ms後加下一點
+    setTimeout(addNextPoint, 300);
   }
-
   addNextPoint();
 })
 .catch(err => {
@@ -72,3 +68,4 @@ fetch(jsonUrl)
 </script>
 </body>
 </html>
+
