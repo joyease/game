@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>OpenStreetMap 座標點逐點顯示示範</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<style>
+  #map {
+    width: 800px;
+    height: 600px;
+  }
+</style>
+</head>
+<body>
+<h3>OpenStreetMap 座標點逐點顯示示範</h3>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+const jsonUrl = 'https://raw.githubusercontent.com/joyease/game/main/2508China.json';
+
+const map = L.map('map').setView([35.0, 135.0], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+fetch(jsonUrl)
+.then(response => response.json())
+.then(data => {
+  const latlngs = [];
+  let prevLatLng = null;
+  let index = 0;
+
+  map.fitBounds(L.latLngBounds(data.map(p => [p.Latitude, p.Longitude])));
+
+  function addNextPoint() {
+    if (index >= data.length) return;
+    const point = data[index];
+    const latLng = [point.Latitude, point.Longitude];
+    latlngs.push(latLng);
+
+    // 加點
+    const circleMarker = L.circleMarker(latLng, {
+      radius: 5,
+      fillColor: 'red',
+      color: 'black',
+      weight: 1,
+      fillOpacity: 0.8
+    }).addTo(map);
+    circleMarker.bindPopup(`<b>地點:</b> ${point.Location}<br><b>日期:</b> ${point.Date}`);
+
+    // 加線
+    if (latlngs.length > 1) {
+      const line = L.polyline([latlngs[latlngs.length-2], latlngs[latlngs.length-1]], {
+        color: 'blue',
+        weight: 1,
+        dashArray: '5, 10'
+      }).addTo(map);
+    }
+
+    index++;
+    setTimeout(addNextPoint, 300); // 300ms後加下一點
+  }
+
+  addNextPoint();
+})
+.catch(err => {
+  console.error('載入JSON出錯:', err);
+});
+</script>
+</body>
+</html>
