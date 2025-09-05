@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MySports – 跑步·基本運動</title>
+<style>
+:root{
+  --bg:#f7f7f7;
+  --panel:#ffffff;
+  --text:#222;
+  --muted:#667085;
+  --brand:#5b7a2a;      /* 按鈕綠 */
+  --brand-weak:#a9bb79; /* 倒數綠 */
+  --accent:#ff7a00;     /* 大卡橘 */
+  --ring:#e6e6e6;       /* 外圈灰 */
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:var(--text)}
+.app{
+  max-width:430px;
+  margin:0 auto;
+  background:#fff;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ====== 頂部 ====== */
+.appbar{
+  background:#2d3439;
+  color:#fff;
+  padding:12px 16px 8px;
+}
+.status{
+  display:flex;align-items:center;justify-content:space-between;font-size:12px;opacity:.9
+}
+.titlebar{
+  display:flex;align-items:center;gap:14px;margin-top:4px
+}
+.titlebar .back{font-size:15px;opacity:.9}
+.titlebar .center{
+  margin:0 auto 0 0;font-weight:700;font-size:22px;
+}
+.titlebar .icons{display:flex;gap:12px;font-size:20px;opacity:.9}
+
+/* ====== 模式列 ====== */
+.modebar{
+  display:flex;align-items:center;gap:10px;
+  background:#f3f5f7;padding:10px 16px;border-bottom:1px solid #eaeaea
+}
+.badge{
+  width:28px;height:28px;border-radius:999px;background:#1976d2;
+  color:#fff;display:grid;place-items:center;font-size:16px
+}
+.modebar .mode{font-weight:700}
+.modebar .gps{margin-left:auto;font-size:13px;color:#7b8794;display:flex;align-items:center;gap:6px}
+
+/* ====== 內容 ====== */
+.content{padding:18px 16px 8px;flex:1;background:#fff}
+.grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start
+}
+.metric{
+  background:var(--panel);border-radius:10px;padding:12px 12px;
+  border:1px solid #efefef;min-height:96px
+}
+.metric h4{
+  margin:0 0 6px;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px
+}
+.metric h4 .caret{font-size:14px;color:#777;margin-left:6px}
+.metric .big{font-size:34px;font-weight:800;letter-spacing:.5px}
+.metric .unit{margin-top:2px;color:#8a8f98;font-size:13px}
+
+/* ====== 中央錶盤 ====== */
+.dial-wrap{
+  grid-column:2 / 3;
+  grid-row:1 / 4;
+  align-self:stretch;display:flex;justify-content:center;align-items:center
+}
+.dial{
+  width:min(86vw,320px);aspect-ratio:1/1;position:relative
+}
+.dial svg{width:100%;height:100%}
+.dial .time{
+  position:absolute;inset:0;display:grid;place-items:center;text-align:center
+}
+.dial .time .hhmmss{font-size:48px;font-weight:800;letter-spacing:1px}
+.dial .labels{margin-top:2px;font-size:12px;color:#7b8794}
+.kcal{
+  position:absolute;left:50%;bottom:18%;transform:translateX(-50%);
+  text-align:center
+}
+.kcal .num{color:var(--accent);font-size:44px;font-weight:800;line-height:1}
+.kcal .lbl{font-size:14px;color:#7b8794}
+
+/* ====== 底部動作 ====== */
+.actions{
+  display:grid;grid-template-columns:1fr 1fr;gap:14px;
+  padding:14px 16px;border-top:1px solid #f0f0f0;background:#fff
+}
+.btn{
+  border:0;border-radius:10px;padding:14px 12px;font-size:18px;font-weight:800;
+  cursor:pointer
+}
+.btn-count{background:var(--brand-weak);color:#20310f}
+.btn-start{background:var(--brand);color:#fff}
+
+/* ====== 底部導覽 ====== */
+.navbar{
+  display:flex;justify-content:space-around;align-items:center;
+  background:#2d3439;color:#e9eef3;padding:8px 8px 10px
+}
+.navitem{display:grid;place-items:center;font-size:12px;gap:4px;opacity:.95}
+.navitem .ico{width:28px;height:28px;border-radius:100px;background:#3a434a;display:grid;place-items:center;font-size:16px}
+
+/* 小螢幕調整 */
+@media (max-width:420px){
+  .grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 上方狀態與標題 -->
+  <header class="appbar">
+    <div class="status">
+      <div>16:26 ▴ GPS</div>
+      <div>訊號 ••••　電量 82%</div>
+    </div>
+    <div class="titlebar">
+      <div class="back">運動設定</div>
+      <div class="center">MySports</div>
+      <div class="icons"><span>📷</span><span>🎵</span></div>
+    </div>
+  </header>
+
+  <!-- 模式列 -->
+  <div class="modebar">
+    <div class="badge">🏃‍♂️</div>
+    <div class="mode">跑步・基本運動</div>
+    <div class="gps">🌟 GPS 已開啟</div>
+  </div>
+
+  <!-- 主要內容 -->
+  <main class="content">
+    <div class="grid">
+      <!-- 全程時間 -->
+      <section class="metric">
+        <h4>全程時間 <span class="caret">▼</span></h4>
+        <div class="big" id="totalTime">00:00:00</div>
+      </section>
+
+      <!-- 中央錶盤 -->
+      <section class="dial-wrap">
+        <div class="dial">
+          <!-- 外圈背景 -->
+          <svg viewBox="0 0 120 120" aria-hidden="true">
+            <circle cx="60" cy="60" r="52" stroke="var(--ring)" stroke-width="10" fill="none" stroke-linecap="round"/>
+            <!-- 進度圈（以秒為單位旋轉） -->
+            <circle id="progress" cx="60" cy="60" r="52" stroke="#cfd3d7" stroke-width="10" fill="none"
+                    stroke-linecap="round" transform="rotate(-90 60 60)"
+                    stroke-dasharray="327.6" stroke-dashoffset="327.6"/>
+          </svg>
+          <div class="time">
+            <div class="hhmmss" id="centerTime">00:00</div>
+            <div class="labels">時　分　秒</div>
+          </div>
+          <div class="kcal">
+            <div class="num" id="kcal">0</div>
+            <div class="lbl">大卡</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 全程距離 -->
+      <section class="metric">
+        <h4>全程距離 <span class="caret">▼</span></h4>
+        <div class="big" id="distance">0.00</div>
+        <div class="unit">公里</div>
+      </section>
+
+      <!-- 平均配速 -->
+      <section class="metric">
+        <h4>平均配速 <span class="caret">▼</span></h4>
+        <div class="big" id="pace">--</div>
+        <div class="unit">分鐘 / 公里</div>
+      </section>
+    </div>
+  </main>
+
+  <!-- 底部按鈕 -->
+  <div class="actions">
+    <button class="btn btn-count" id="btnCountdown">10 秒倒數</button>
+    <button class="btn btn-start" id="btnStart">開始運動</button>
+  </div>
+
+  <!-- 底部導覽 -->
+  <nav class="navbar">
+    <div class="navitem"><div class="ico">📶</div><div>動態</div></div>
+    <div class="navitem"><div class="ico">📋</div><div>紀錄</div></div>
+    <div class="navitem"><div class="ico">▶️</div><div>開始</div></div>
+    <div class="navitem"><div class="ico">🏅</div><div>挑戰</div></div>
+    <div class="navitem"><div class="ico">👤</div><div>個人</div></div>
+  </nav>
+</div>
+
+<script>
+/* ====== 簡易計時器與圓環動畫 ====== */
+let running = false;
+let startEpoch = 0;
+let elapsed = 0; // 累計秒
+let rafId = null;
+
+const elTotal = document.getElementById('totalTime');
+const elCenter = document.getElementById('centerTime');
+const elProgress = document.getElementById('progress');
+const elKcal = document.getElementById('kcal');
+const dash = 2 * Math.PI * 52; // circle length
+
+function fmtHMS(totalSeconds){
+  const s = Math.floor(totalSeconds % 60);
+  const m = Math.floor((totalSeconds / 60) % 60);
+  const h = Math.floor(totalSeconds / 3600);
+  const pad = n => String(n).padStart(2,'0');
+  return {h, m, s, text:`${pad(h)}:${pad(m)}:${pad(s)}`, mmss:`${pad(m)}:${pad(s)}`};
+}
+function render(){
+  const now = running ? (Date.now() - startEpoch)/1000 + elapsed : elapsed;
+  const f = fmtHMS(now);
+  elTotal.textContent = f.text;
+  elCenter.textContent = f.mmss;
+  // 圓環依秒數在 60 秒內循環
+  const sec = Math.floor(now % 60);
+  const offset = dash * (1 - sec / 60);
+  elProgress.setAttribute('stroke-dasharray', dash);
+  elProgress.setAttribute('stroke-dashoffset', offset.toFixed(1));
+  // 超簡單熱量估算（示意）：每分鐘 8 大卡
+  elKcal.textContent = Math.floor(now/60 * 8);
+  if(running) rafId = requestAnimationFrame(render);
+}
+render();
+
+document.getElementById('btnStart').addEventListener('click', function(){
+  if(!running){
+    running = true;
+    startEpoch = Date.now();
+    this.textContent = '暫停';
+    render();
+  }else{
+    running = false;
+    cancelAnimationFrame(rafId);
+    elapsed = (Date.now() - startEpoch)/1000 + elapsed;
+    this.textContent = '繼續';
+    render();
+  }
+});
+
+document.getElementById('btnCountdown').addEventListener('click', async function(){
+  if(running) return;
+  let left = 10;
+  const orig = this.textContent;
+  while(left>0){
+    this.textContent = `倒數 ${left--} 秒`;
+    await new Promise(r=>setTimeout(r,1000));
+  }
+  this.textContent = orig;
+  document.getElementById('btnStart').click(); // 自動開始
+});
+</script>
+</body>
+</html>
