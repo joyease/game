@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect" />
+    <link
+      as="style"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Spline+Sans%3Awght%40400%3B500%3B700"
+      onload="this.rel='stylesheet'"
+      rel="stylesheet"
+    />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <title>運動旅遊</title>
+    <link href="data:image/x-icon;base64," rel="icon" type="image/x-icon" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style type="text/tailwindcss">
+      :root {
+        --primary-color: #ea2a33;
+      }
+    </style>
+    <style>
+      body {
+        min-height: max(884px, 100dvh);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    <div
+      class="relative flex size-full min-h-screen flex-col justify-between group/design-root"
+      style='font-family: "Spline Sans", "Noto Sans", sans-serif;'
+    >
+      <div class="flex-grow">
+        <div class="relative">
+          <div
+            class="w-full bg-center bg-no-repeat bg-cover h-96"
+            style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCuxgiGbI-j4DDn_ni1atwfSFDIN79T0xbUzCUwF-_zO8x8UUAAxUKKxc-feYqTXkWoDSjvv8Q0Qd5bXLE1P1yxwvlozK-DVEJ7OEvsbvmvs5gOUIqjT_5W6Lc0XGAPNlR3y1_EnyOJ3p1kPuMFjU3beaGBwrhPS9ZLAObPPZB_PvjlKKKBh8mHmgTnq2IZ8qzxlXYOMDyRo1r-70SNzIX30o9Jzawwc2seaKMLpSybeyPdsWXdBXKd43pPdj80Y8ho5N10lv-QXp_b");'
+          >
+            <div class="absolute inset-0 bg-black/20"></div>
+          </div>
+            <div class="absolute inset-x-0 bottom-0 px-4 pb-6">
+            <h1 class="text-4xl font-bold text-white mb-2">運動旅遊 SporTrip</h1>
+            <p class="text-lg text-white/90">讓運動結合旅遊</p>
+              <div class="mt-4">
+              <label class="flex flex-col min-w-40 w-full">
+                <div class="flex w-full flex-1 items-stretch rounded-full shadow-lg h-14">
+                  <div class="text-gray-500 flex bg-white items-center justify-center pl-5 rounded-l-full">
+                    <span class="material-symbols-outlined"> search </span>
+                  </div>
+                  <input
+                    class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-r-full text-gray-800 focus:outline-0 focus:ring-0 border-none bg-white focus:border-none h-full placeholder:text-gray-500 px-4 text-base font-normal leading-normal"
+                    placeholder="搜尋目的地或活動"
+                    value=""
+                  />
+              </div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+  </body>
+</html>
