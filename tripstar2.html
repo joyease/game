@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,18 +19,25 @@
         --primary-color: #ea2a33;
       }
     </style>
-      <title>GPS 地圖標記展示</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-  <style>
-    #map { height: 80vh; width: 100%; }
-    body { font-family: "Noto Sans TC", Arial, sans-serif; }
-    #filterForm { margin-bottom: 1em; }
-  </style>
+    <title>GPS 地圖標記展示</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
       body {
-        min-height: max(884px, 100dvh);
+        font-family: "Noto Sans TC", Arial, sans-serif;
+        min-height: max(840px, 85dvh);
+      }
+      #map {
+        width: 100%;
+        height: 800px; /* 固定高度 */
+        max-height: 80vh; /* 避免太高 */
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      @media (max-width: 768px) {
+        #map {
+          height: 50vh; /* 手機時縮小一點 */
+        }
       }
     </style>
   </head>
@@ -65,169 +73,137 @@
             </div>
           </div>
         </div>
- <h2>SafeTrip 安心回報</h2>
-  <p>登山遠行,夜歸遲到,讓親友知道你的安全!</p> 
-  <P>說好代碼,你回報位置,而親友輸入來查詢! 請輸入H09看示範</P>
-  <form id="filterForm">
-    <label for="teamInput">輸入代碼：</label>
-    <input type="text" id="teamInput" required>
-    <button type="submit">查詢</button>
-  </form>
-  <div id="map"></div>
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-  <script>
-    // 1. 初始化地圖
-    const map = L.map('map').setView([24, 121], 7); // 台灣中心點
+        <h2 class="mt-6 text-xl font-bold px-4">Trip 位置共享</h2>
+        <p class="px-4">登山遠行, 團體出遊, 彼此看到彼此的位置，互相關心安全!</p>
+        <p class="px-4 mb-2">說好代碼, 回報位置, 輸入查詢! 請輸入 H09 看示範</p>
+        <form id="filterForm" class="px-4 mb-4">
+          <label for="teamInput">輸入代碼：</label>
+          <input type="text" id="teamInput" required class="border p-1 rounded">
+          <button type="submit" class="ml-2 px-3 py-1 bg-red-500 text-white rounded">查詢</button>
+        </form>
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+        <div id="map"></div>
 
-    // 2. 深色顏色池與姓名分配邏輯
-    const deepColors = [
-      '#8B0000', '#00008B', '#006400', '#4B0082', '#2F4F4F',
-      '#800000', '#191970', '#483D8B', '#2E0854', '#0B3D91'
-    ];
-    const nameColorMap = {};
-    function getDeepColorForName(name) {
-      if (!nameColorMap[name]) {
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-          hash += name.charCodeAt(i);
-        }
-        nameColorMap[name] = deepColors[hash % deepColors.length];
-      }
-      return nameColorMap[name];
-    }
+        <!-- Leaflet JS -->
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <script>
+          // 初始化地圖
+          const map = L.map('map').setView([24, 121], 7);
 
-    // 3. 標記圖層管理
-    let markersLayer = L.layerGroup().addTo(map);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
 
-    // 4. 載入 GPS 資料
-    let allData = [];
-    async function loadGPSData() {
-      const url = 'https://opensheet.elk.sh/18Ol8kRgvdd6Do91s17CT-w32ds2n3zdN7cf6bDn9a38/位置記錄';
-      try {
-        const res = await fetch(url);
-        allData = await res.json();
-        // 預設不顯示任何標記，需用戶查詢
-      } catch (e) {
-        alert('資料載入失敗，請查看 console。');
-        console.error(e);
-      }
-    }
+          map.whenReady(() => {
+            map.invalidateSize();
+          });
 
-    // 5. 篩選並顯示標記
-    function showTeamMarkers(teamCode) {
-      markersLayer.clearLayers();
+          // 深色顏色池
+          const deepColors = [
+            '#8B0000', '#00008B', '#006400', '#4B0082', '#2F4F4F',
+            '#800000', '#191970', '#483D8B', '#2E0854', '#0B3D91'
+          ];
+          const nameColorMap = {};
+          function getDeepColorForName(name) {
+            if (!nameColorMap[name]) {
+              let hash = 0;
+              for (let i = 0; i < name.length; i++) {
+                hash += name.charCodeAt(i);
+              }
+              nameColorMap[name] = deepColors[hash % deepColors.length];
+            }
+            return nameColorMap[name];
+          }
 
-      // 依團體編號過濾
-      const filtered = allData.filter(row => row['團隊編號'] === teamCode);
+          // 標記圖層
+          let markersLayer = L.layerGroup().addTo(map);
 
-      // 依姓名分組，取每人最新一筆（假設「時間」欄為字串且格式可排序）
-      const latestByName = {};
-      filtered.forEach(row => {
-        const name = row['姓名'];
-        if (!latestByName[name] || row['時間'] > latestByName[name]['時間']) {
-          latestByName[name] = row;
-        }
-      });
+          // 載入 GPS 資料
+          let allData = [];
+          async function loadGPSData() {
+            const url = 'https://opensheet.elk.sh/18Ol8kRgvdd6Do91s17CT-w32ds2n3zdN7cf6bDn9a38/位置記錄';
+            try {
+              const res = await fetch(url);
+              allData = await res.json();
+            } catch (e) {
+              alert('資料載入失敗，請查看 console。');
+              console.error(e);
+            }
+          }
 
-      // 顯示標記
-      Object.values(latestByName).forEach(row => {
-        const name = row['姓名'];
-        const lat = parseFloat(row['緯度']);
-        const lng = parseFloat(row['經度']);
-        const uuid = row['UUID'];
-        const time = row['時間'];
-        if (isNaN(lat) || isNaN(lng)) return;
+          // 顯示標記
+          function showTeamMarkers(teamCode) {
+            markersLayer.clearLayers();
+            const filtered = allData.filter(row => row['團隊編號'] === teamCode);
+            const latestByName = {};
+            filtered.forEach(row => {
+              const name = row['姓名'];
+              if (!latestByName[name] || row['時間'] > latestByName[name]['時間']) {
+                latestByName[name] = row;
+              }
+            });
 
-        const color = getDeepColorForName(name);
-        const marker = L.circleMarker([lat, lng], {
-          radius: 5,
-          color: color,
-          fillColor: color,
-          fillOpacity: 0.8
-        });
-        marker.bindPopup(
-          `<b>${name || ''}</b><br>UUID: ${uuid || ''}<br>時間: ${time || ''}`
-        );
-        marker.addTo(markersLayer);
-      });
+            Object.values(latestByName).forEach(row => {
+              const name = row['姓名'];
+              const lat = parseFloat(row['緯度']);
+              const lng = parseFloat(row['經度']);
+              const uuid = row['UUID'];
+              const time = row['時間'];
+              if (isNaN(lat) || isNaN(lng)) return;
 
-      // 若有資料則自動縮放
-      const points = Object.values(latestByName).map(row => [parseFloat(row['緯度']), parseFloat(row['經度'])]);
-      if (points.length > 0) {
-        map.fitBounds(points, { maxZoom: 18 });
-      }
-    }
+              const color = getDeepColorForName(name);
+              const marker = L.circleMarker([lat, lng], {
+                radius: 5,
+                color: color,
+                fillColor: color,
+                fillOpacity: 0.8
+              });
+              marker.bindPopup(`<b>${name || ''}</b><br>UUID: ${uuid || ''}<br>時間: ${time || ''}`);
+              marker.addTo(markersLayer);
+            });
 
-    // 6. 表單事件
-    document.getElementById('filterForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      const teamCode = document.getElementById('teamInput').value.trim();
-      if (!teamCode) return;
-      showTeamMarkers(teamCode);
-    });
+            const points = Object.values(latestByName).map(row => [parseFloat(row['緯度']), parseFloat(row['經度'])]);
+            if (points.length > 0) {
+              map.fitBounds(points, { maxZoom: 18 });
+            }
+          }
 
-    // 7. 載入資料
-    loadGPSData();
-  </script>
-        
-          </div>
-        </div>
+          // 表單事件
+          document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const teamCode = document.getElementById('teamInput').value.trim();
+            if (!teamCode) return;
+            showTeamMarkers(teamCode);
+          });
+
+          // 載入資料
+          loadGPSData();
+        </script>
       </div>
+
       <div class="sticky bottom-0">
-        <div
-          class="flex gap-2 border-t border-gray-200 bg-white px-4 pb-3 pt-2 shadow-t-lg"
-        >
-          <a
-            class="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[var(--primary-color)]"
-            href="https://sportrip7.wordpress.com"
-          >
+        <div class="flex gap-2 border-t border-gray-200 bg-white px-4 pb-3 pt-2 shadow-t-lg">
+          <a class="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[var(--primary-color)]" href="https://sportrip7.wordpress.com">
             <span class="material-symbols-outlined"> explore </span>
-            <p class="text-xs font-medium leading-normal tracking-[0.015em]">
-              SporTrip創新探索 
-            </p>
+            <p class="text-xs font-medium leading-normal tracking-[0.015em]">SporTrip創新探索</p>
           </a>
-          <a
-            class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500"
-            href="https://ailuyu.blogspot.com"
-          >
+          <a class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500" href="https://ailuyu.blogspot.com">
             <span class="material-symbols-outlined"> favorite </span>
-            <p class="text-xs font-medium leading-normal tracking-[0.015em]">
-              文華旅遊筆記
-            </p>
+            <p class="text-xs font-medium leading-normal tracking-[0.015em]">文華旅遊筆記</p>
           </a>
-          <a
-            class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500"
-            href="http://www.taiwanmobile.com"
-          >
+          <a class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500" href="http://www.taiwanmobile.com">
             <span class="material-symbols-outlined">briefcase</span>
-            <p class="text-xs font-medium leading-normal tracking-[0.015em]">
-              持續學習與創新
-            </p>
+            <p class="text-xs font-medium leading-normal tracking-[0.015em]">持續學習與創新</p>
           </a>
-          <a
-            class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500"
-            href="#"
-          >
+          <a class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500" href="#">
             <span class="material-symbols-outlined"> inbox </span>
-            <p class="text-xs font-medium leading-normal tracking-[0.015em]">
-              聯絡信箱
-            </p>
+            <p class="text-xs font-medium leading-normal tracking-[0.015em]">聯絡信箱</p>
           </a>
-          <a
-            class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500"
-            href="#"
-          >
+          <a class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500" href="#">
             <span class="material-symbols-outlined"> account_circle </span>
-            <p class="text-xs font-medium leading-normal tracking-[0.015em]">
-              Hermann Huang
-            </p>
+            <p class="text-xs font-medium leading-normal tracking-[0.015em]">Hermann Huang</p>
           </a>
         </div>
       </div>
