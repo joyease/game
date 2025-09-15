@@ -78,7 +78,6 @@
         <p class="px-4">連接到訪過的城鎮</p>
         <p class="px-4 mb-2">點開小點有一些註記</p>
         
-
         <div id="map"></div>
 
         <!-- Leaflet JS -->
@@ -87,7 +86,7 @@
         let map;
 
         function initMap() {
-            map = L.map('map').setView([28.5, 121], 4); // 預設杭州中心
+            map = L.map('map').setView([36.1408, -5.3536], 2); // 預設直布羅陀中心
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap 貢獻者'
@@ -101,8 +100,11 @@
                 const response = await fetch('https://raw.githubusercontent.com/aidusu/3kingdom/main/travel.json');
                 const data = await response.json();
 
-                data.forEach(point => {
-                    addMarker(point.lat, point.lng, point.label, point.date, point.note);
+                // 逐一延遲顯示點位
+                data.forEach((point, index) => {
+                    setTimeout(() => {
+                        addMarker(point.lat, point.lng, point.label, point.date, point.note);
+                    }, index * 800); // 每個點間隔 0.8 秒
                 });
             } catch (error) {
                 console.error('載入資料失敗:', error);
@@ -118,9 +120,14 @@
                 日期: ${date}<br>
                 備註: ${note}
             `;
-            L.marker([lat, lng])
-                .addTo(map)
-                .bindPopup(popupContent);
+            L.circleMarker([lat, lng], {
+                radius: 3,
+                color: "#ff7f00",   // 外框顏色
+                fillColor: "#0000ff", // 填滿顏色
+                fillOpacity: 0.9
+            })
+            .addTo(map)
+            .bindPopup(popupContent);
         }
 
         document.addEventListener('DOMContentLoaded', initMap);
@@ -154,3 +161,4 @@
     </div>
   </body>
 </html>
+
