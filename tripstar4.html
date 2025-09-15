@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="zh-Hant">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,9 +19,25 @@
         --primary-color: #ea2a33;
       }
     </style>
+    <title>GPS 地圖標記展示</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
       body {
-        min-height: max(884px, 100dvh);
+        font-family: "Noto Sans TC", Arial, sans-serif;
+        min-height: max(880px, 100dvh);
+      }
+      #map {
+        width: 100%;
+        height: 800px; /* 固定高度 */
+        max-height: 80vh; /* 避免太高 */
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      @media (max-width: 768px) {
+        #map {
+          height: 50vh; /* 手機時縮小一點 */
+        }
       }
     </style>
   </head>
@@ -33,13 +50,13 @@
         <div class="relative">
           <div
             class="w-full bg-center bg-no-repeat bg-cover h-96"
-            style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDpIJYNek9JfKAhBY6Kp1CUpHfaH8KYZHSO1Kk4OrwNVczmd-rvnmYSV784aQuklatPKpeO4Bowdz_Efz2jx1ArtyUy9-eYsnqhQVAyPnv9Fvudceed_z1IEQCBFqkWbl-7abLGHBbcZi6XkGP9562wELED1LmVS2Ca1uvkU2LCau6dVGZoN3H6W6utjbzj0lZzv8HYlYNtazLQ-49jv5iI-FAcA5Dgn9Wu6Ueify8HstTdTUS7o4HfOiKxPAiaC6VQEic-GZHQaZjh");'
+            style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCbhDMytwDSazkAp-qAGAoAkyiwgWBxTdIPp8mJBFBoZlaSIfGdUXeiYC-GeR9RDyTiu0tKq0kSACBUESrA6QrFr_uB9fUOo_JOBGvvzgilqazNun0wTa-P7xcJ7F4a456Jp2-Fj4lBa10PVKAaQqEcGoiFAYJ7axVlQJFIXDlIUycqo6pPxVi30_KPCRittxrLvQSa-jUlze7mjQo-zJxujTL8PuvRrrT9V6FZ-eazgGtw2lSNrtEEac7vW8wsy6blF7h21lRGnRjM");'
           >
             <div class="absolute inset-0 bg-black/20"></div>
           </div>
           <div class="absolute inset-x-0 bottom-0 px-4 pb-6">
-            <h1 class="text-4xl font-bold text-white mb-2">趣點點 Trip Stars</h1>
-            <p class="text-lg text-white/90">紀錄旅遊的星光點點</p>
+            <h1 class="text-4xl font-bold text-white mb-2"> Trip 點點相連</h1>
+            <p class="text-lg text-white/90">連接全球到訪過的城鎮</p>
             <div class="mt-4">
               <label class="flex flex-col min-w-40 w-full">
                 <div class="flex w-full flex-1 items-stretch rounded-full shadow-lg h-14">
@@ -56,113 +73,81 @@
             </div>
           </div>
         </div>
-        <div class="px-4 py-6">
-          <h2 class="text-2xl font-bold leading-tight tracking-tight text-gray-900">主要功能</h2>
-          <div
-            class="mt-4 flex flex-col md:flex-row md:flex-nowrap gap-4 overflow-x-auto [-ms-scrollbar-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            <div class="flex-shrink-0 w-64">
-              <div
-                class="w-64 h-80 bg-center bg-no-repeat bg-cover rounded-xl"
-                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA1POCYBRcDDXZmXAR8ld4HTQxhyJJjmKXsIpICqNJQttQpChNs70cjSTcUvCh8gcSf-AFB-jtUUH_UjiPz0nU0eJqIVc-9LtotSqhLNRWePDyhDBT8wfJp1B_9HPQ32aGY7t6ylQeMHWbBOFYE2D3633VtCc3zuvdOwOVkY6DbDDK4o1ydudv4Z3mzMhGRve_3qnnnE54WCufGYqn0Rz_Bzo00_i1uA8qpiaJT-ZsHblXlWNlWfZVaDGDqdqawP-nP4E1WF209X4z9");'
-              ></div>
-              <div class="pt-3">
-                <a
-                  href="https://sites.google.com/view/hhtrip/trip%E4%BD%8D%E5%85%B1%E4%BA%AB"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-lg font-semibold text-gray-800 block"
-                >
-                  Trip 位置共享
-                </a>
-                <p class="text-sm text-gray-600">旅行中看到彼此的位置</p>
-              </div>
-            </div>
-            <div class="flex-shrink-0 w-64">
-              <div
-                class="w-64 h-80 bg-center bg-no-repeat bg-cover rounded-xl"
-                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCUvpAtARvA-A_L9xZRi_oGoFFjD8cIu1tf8HsBZCKHBvQSQ-2nkW-CCfJUxl9HFJP6YxRJYWLkQw63i8Lvtvtz0BKeErV_bAohf4MOb2zzGZYzQlqRXOwpX11EiSDY4CEij60gi18Pa1Xs75mlh2uUmwUvrMtUAz02EF1bvj21hfNqNY_pMv5wED9G98IxgovFljG8R2WM7F4sl0lY0LqDl3aDVJrgjh2RhlGbsDUx7n0uMpddYGd_8mh6WkeBewqu_rP2CuLCjfvI");'
-              ></div>
-              <div class="pt-3">
-                <a
-                  href="https://sites.google.com/view/hhtrip/trip%E6%89%93%E5%8D%A1"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-lg font-semibold text-gray-800 block"
-                >
-                  Trip 景點打卡
-                </a>
-                <p class="text-sm text-gray-600">旅行中標註回憶景點</p>
-              </div>
-            </div>
-            <div class="flex-shrink-0 w-64">
-              <div
-                class="w-64 h-80 bg-center bg-no-repeat bg-cover rounded-xl"
-                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDZ9863KUQuY3qq077huD0XANcpVNhspXmuQOUwrK5g3iRrES4WjvdDJ1FiJrEPjLv-q_4VPL3zyg6JX70jUJngWzJYp2PAJhlIiCa_UfeE8KYLp26dlEKkR1A_6cChqetli9Ake6li1w0ejpbTt6Ie7sq8Nj3hsFDY2k21D3H4VXKvhCM1QbFirztc1Mq1AJjwqcbSRK11ehKVeK1tDMy4Pz5kxhywoslA1ZA8_vT9Qtme7t9LXjUrAsfUBApkLsFQyXI7yb5HIkJM");'
-              ></div>
-              <div class="pt-3">
-                <a
-                  href="https://sites.google.com/view/hhtrip/%E5%AF%B0%E5%AE%87%E9%81%8A%E8%B9%A4"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-lg font-semibold text-gray-800 block"
-                >
-                  寰宇遊蹤
-                </a>
-                <p class="text-sm text-gray-600">回顧曾經去過的城市</p>
-              </div>
-            </div>
-          </div>
-        </div>
+
+        <h2 class="mt-6 text-xl font-bold px-4">Trip 點點相連</h2>
+        <p class="px-4">連接到訪過的城鎮</p>
+        <p class="px-4 mb-2">點開小點有一些註記</p>
+        
+
+        <div id="map"></div>
+
+        <!-- Leaflet JS -->
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <script>
+        let map;
+
+        function initMap() {
+            map = L.map('map').setView([28.5, 121], 4); // 預設杭州中心
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap 貢獻者'
+            }).addTo(map);
+
+            fetchDataAndPlot();
+        }
+
+        async function fetchDataAndPlot() {
+            try {
+                const response = await fetch('https://raw.githubusercontent.com/aidusu/3kingdom/main/travel.json');
+                const data = await response.json();
+
+                data.forEach(point => {
+                    addMarker(point.lat, point.lng, point.label, point.date, point.note);
+                });
+            } catch (error) {
+                console.error('載入資料失敗:', error);
+                alert('無法載入GPS資料，請稍後再試。');
+            }
+        }
+
+        function addMarker(lat, lng, label = '未命名地點', date = '', note = '') {
+            const popupContent = `
+                <b>${label}</b><br>
+                緯度: ${lat}<br>
+                經度: ${lng}<br>
+                日期: ${date}<br>
+                備註: ${note}
+            `;
+            L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup(popupContent);
+        }
+
+        document.addEventListener('DOMContentLoaded', initMap);
+		</script>
       </div>
+
       <div class="sticky bottom-0">
-        <div
-          class="flex gap-2 border-t border-gray-200 bg-white px-4 pb-3 pt-2 shadow-t-lg"
-        >
-          <a
-            class="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[var(--primary-color)]"
-            href="https://sportrip7.wordpress.com"
-          >
+        <div class="flex gap-2 border-t border-gray-200 bg-white px-4 pb-3 pt-2 shadow-t-lg">
+          <a class="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[var(--primary-color)]" href="https://sportrip7.wordpress.com">
             <span class="material-symbols-outlined"> explore </span>
-            <p class="text-xs font-medium leading-normal tracking-[0.015em]">
-              SporTrip創新探索 
-            </p>
+            <p class="text-xs font-medium leading-normal tracking-[0.015em]">SporTrip創新探索</p>
           </a>
-          <a
-            class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500"
-            href="https://ailuyu.blogspot.com"
-          >
+          <a class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500" href="https://www.mysports.net.tw">
             <span class="material-symbols-outlined"> favorite </span>
-            <p class="text-xs font-medium leading-normal tracking-[0.015em]">
-              文華旅遊筆記
-            </p>
+            <p class="text-xs font-medium leading-normal tracking-[0.015em]">MySports社群網站</p>
           </a>
-          <a
-            class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500"
-            href="http://www.taiwanmobile.com"
-          >
-            <span class="material-symbols-outlined">briefcase</span>
-            <p class="text-xs font-medium leading-normal tracking-[0.015em]">
-              持續學習與創新
-            </p>
+          <a class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500" href="http://sites.google.com/view/mytrip">
+            <span class="material-symbols-outlined">home</span>
+            <p class="text-xs font-medium leading-normal tracking-[0.015em]">TripStar</p>
           </a>
-          <a
-            class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500"
-            href="#"
-          >
+          <a class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500" href="#">
             <span class="material-symbols-outlined"> inbox </span>
-            <p class="text-xs font-medium leading-normal tracking-[0.015em]">
-              聯絡信箱
-            </p>
+            <p class="text-xs font-medium leading-normal tracking-[0.015em]">聯絡信箱</p>
           </a>
-          <a
-            class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500"
-            href="#"
-          >
+          <a class="flex flex-1 flex-col items-center justify-end gap-1 text-gray-500" href="#">
             <span class="material-symbols-outlined"> account_circle </span>
-            <p class="text-xs font-medium leading-normal tracking-[0.015em]">
-              Hermann Huang
-            </p>
+            <p class="text-xs font-medium leading-normal tracking-[0.015em]">Hermann Huang</p>
           </a>
         </div>
       </div>
