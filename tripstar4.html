@@ -86,7 +86,7 @@
         let map;
 
         function initMap() {
-            map = L.map('map').setView([31.7683, 35.2137], 3); // 預設耶路撒冷中心
+            map = L.map('map').setView([31.7683, 60.2137], 3); // 預設土庫曼中心
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap 貢獻者'
@@ -104,7 +104,7 @@
                 data.forEach((point, index) => {
                     setTimeout(() => {
                         addMarker(point.lat, point.lng, point.label, point.date, point.note);
-                    }, index * 800); // 每個點間隔 0.8 秒
+                    }, index * 800); // 每個點間隔 0.3 秒
                 });
             } catch (error) {
                 console.error('載入資料失敗:', error);
@@ -122,9 +122,10 @@
             `;
             L.circleMarker([lat, lng], {
                 radius: 3,
-                color: "#ff7f00",   // 外框顏色
-                fillColor: "#0000ff", // 填滿顏色
-                fillOpacity: 0.9
+                color: "#0000ff",   // 外框顏色
+                fillColor: "#ff7f00", // 填滿顏色
+                fillOpacity: 0.9,
+				weight: 1                // 外框粗細，數值越小線越細
             })
             .addTo(map)
             .bindPopup(popupContent);
