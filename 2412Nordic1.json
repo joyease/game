@@ -535,25 +535,25 @@
     },
     {
         "Date": "10-05",
-        "Location": "71",
+        "Location": "71松林湖",
         "Latitude": 67.53981252760893,
         "Longitude": 22.643326638055157
     },
     {
         "Date": "10-06",
-        "Location": "74",
+        "Location": "74松林湖",
         "Latitude": 67.539664,
         "Longitude": 22.643621
     },
     {
         "Date": "10-06",
-        "Location": "75",
+        "Location": "75松林湖",
         "Latitude": 67.538122,
         "Longitude": 22.638368
     },
     {
         "Date": "10-06",
-        "Location": "76",
+        "Location": "76松林湖",
         "Latitude": 67.5399523,
         "Longitude": 22.6430043
     },
@@ -577,31 +577,31 @@
     },
     {
         "Date": "10-07",
-        "Location": "80",
+        "Location": "80松林湖",
         "Latitude": 67.538528,
         "Longitude": 22.6419444
     },
     {
         "Date": "10-07",
-        "Location": "81",
+        "Location": "81松林湖",
         "Latitude": 67.53992533337923,
         "Longitude": 22.643414922557806
     },
     {
         "Date": "10-07",
-        "Location": "82",
+        "Location": "82松林湖",
         "Latitude": 67.5397498,
         "Longitude": 22.643338
     },
     {
         "Date": "10-07",
-        "Location": "83",
+        "Location": "83松林湖",
         "Latitude": 67.53986077106025,
         "Longitude": 22.643359656718264
     },
     {
         "Date": "10-08",
-        "Location": "84",
+        "Location": "84松林湖",
         "Latitude": 67.5228676,
         "Longitude": 22.6605864
     },
@@ -613,31 +613,31 @@
     },
     {
         "Date": "10-08",
-        "Location": "86",
+        "Location": "86瑞典北極圈",
         "Latitude": 66.5601729,
         "Longitude": 23.8359825
     },
     {
         "Date": "10-08",
-        "Location": "87",
+        "Location": "87瑞典北極圈",
         "Latitude": 66.56019784888319,
         "Longitude": 23.835581542050686
     },
     {
         "Date": "10-08",
-        "Location": "88",
+        "Location": "88瑞典",
         "Latitude": 66.5620806,
         "Longitude": 23.8417507
     },
     {
         "Date": "10-08",
-        "Location": "89",
+        "Location": "89芬蘭邊界",
         "Latitude": 66.50612025111464,
         "Longitude": 25.728662889560766
     },
     {
         "Date": "10-08",
-        "Location": "90",
+        "Location": "90洛凡北極圈",
         "Latitude": 66.5573986,
         "Longitude": 25.9047241
     },
@@ -655,13 +655,13 @@
     },
     {
         "Date": "10-08",
-        "Location": "93",
+        "Location": "93洛凡聶米機場",
         "Latitude": 66.55809236093812,
         "Longitude": 25.828274950590068
     },
     {
         "Date": "10-13",
-        "Location": "146",
+        "Location": "146赫爾辛基機場",
         "Latitude": 60.3162923,
         "Longitude": 24.9616836
     },
@@ -673,27 +673,15 @@
     },
     {
         "Date": "10-13",
-        "Location": "144",
+        "Location": "144車站",
         "Latitude": 60.1774319,
         "Longitude": 24.9389107
     },
     {
-        "Date": "10-09",
-        "Location": "94",
-        "Latitude": 60.1489472,
-        "Longitude": 24.9851958
-    },
-    {
-        "Date": "10-09",
-        "Location": "95",
-        "Latitude": 60.149081274662194,
-        "Longitude": 24.984086668248768
-    },
-    {
-        "Date": "10-09",
-        "Location": "96",
-        "Latitude": 60.149981,
-        "Longitude": 24.9841462
+        "Date": "10-13",
+        "Location": "143飯店",
+        "Latitude": 60.17201644057252,
+        "Longitude": 24.942809806705565
     },
     {
         "Date": "10-09",
@@ -703,13 +691,43 @@
     },
     {
         "Date": "10-09",
-        "Location": "98",
+        "Location": "98港口",
         "Latitude": 60.1672365,
         "Longitude": 24.9558455
     },
     {
         "Date": "10-09",
-        "Location": "99",
+        "Location": "94芬蘭堡",
+        "Latitude": 60.1489472,
+        "Longitude": 24.9851958
+    },
+    {
+        "Date": "10-09",
+        "Location": "95芬蘭堡",
+        "Latitude": 60.149081274662194,
+        "Longitude": 24.984086668248768
+    },
+    {
+        "Date": "10-09",
+        "Location": "96芬蘭堡",
+        "Latitude": 60.149981,
+        "Longitude": 24.9841462
+    },
+    {
+        "Date": "10-09",
+        "Location": "103芬蘭堡",
+        "Latitude": 60.14875,
+        "Longitude": 24.982932
+    },
+    {
+        "Date": "10-09",
+        "Location": "102港口",
+        "Latitude": 60.166454,
+        "Longitude": 24.956369
+    },
+    {
+        "Date": "10-09",
+        "Location": "99Kepple下午茶",
         "Latitude": 60.16755607119156,
         "Longitude": 24.950416482135235
     },
@@ -724,18 +742,6 @@
         "Location": "101",
         "Latitude": 60.17018359695721,
         "Longitude": 24.943386397752707
-    },
-    {
-        "Date": "10-09",
-        "Location": "102",
-        "Latitude": 60.166454,
-        "Longitude": 24.956369
-    },
-    {
-        "Date": "10-09",
-        "Location": "103",
-        "Latitude": 60.14875,
-        "Longitude": 24.982932
     },
     {
         "Date": "10-10",
@@ -769,12 +775,6 @@
     },
     {
         "Date": "10-10",
-        "Location": "109",
-        "Latitude": 60.150186153501316,
-        "Longitude": 24.91525594601153
-    },
-    {
-        "Date": "10-10",
         "Location": "110",
         "Latitude": 60.171599,
         "Longitude": 24.943181
@@ -787,13 +787,19 @@
     },
     {
         "Date": "10-10",
-        "Location": "112",
+        "Location": "109",
+        "Latitude": 60.150186153501316,
+        "Longitude": 24.91525594601153
+    },
+    {
+        "Date": "10-10",
+        "Location": "112赫爾辛基港口",
         "Latitude": 60.1413729,
         "Longitude": 24.9027157
     },
     {
         "Date": "10-10",
-        "Location": "113",
+        "Location": "113塔林港口",
         "Latitude": 59.44432171761204,
         "Longitude": 24.764668268938266
     },
@@ -811,7 +817,7 @@
     },
     {
         "Date": "10-10",
-        "Location": "116",
+        "Location": "116塔林",
         "Latitude": 59.4371834,
         "Longitude": 24.7450272
     },
@@ -871,31 +877,31 @@
     },
     {
         "Date": "10-11",
-        "Location": "126",
+        "Location": "126塔林",
         "Latitude": 59.4368314,
         "Longitude": 24.7476237
     },
     {
         "Date": "10-11",
-        "Location": "127",
+        "Location": "127塔林",
         "Latitude": 59.43878354203758,
         "Longitude": 24.742147742050737
     },
     {
         "Date": "10-11",
-        "Location": "128",
+        "Location": "128塔林",
         "Latitude": 59.4388202,
         "Longitude": 24.7424573
     },
     {
         "Date": "10-11",
-        "Location": "129",
+        "Location": "129塔林港口",
         "Latitude": 59.445032429487014,
         "Longitude": 24.76146813459182
     },
     {
         "Date": "10-12",
-        "Location": "130",
+        "Location": "130赫爾辛基港口",
         "Latitude": 60.1614658,
         "Longitude": 24.9714289
     },
@@ -907,7 +913,7 @@
     },
     {
         "Date": "10-12",
-        "Location": "132",
+        "Location": "132飯店廣場",
         "Latitude": 60.1719911,
         "Longitude": 24.9429049
     },
@@ -973,7 +979,7 @@
     },
     {
         "Date": "10-13",
-        "Location": "143",
+        "Location": "143飯店",
         "Latitude": 60.17201644057252,
         "Longitude": 24.942809806705565
     },
@@ -991,7 +997,7 @@
     },
     {
         "Date": "10-13",
-        "Location": "146",
+        "Location": "146機場",
         "Latitude": 60.3162923,
         "Longitude": 24.9616836
     }
