@@ -1,13 +1,19 @@
 [
     {
         "Date": "09-29",
-        "Location": "1",
+        "Location": "1wanta",
         "Latitude": 60.316357315674615,
         "Longitude": 24.95971341593055
     },
     {
         "Date": "09-29",
-        "Location": "2",
+        "Location": "93Rovaniemi",
+        "Latitude": 66.55809236093812,
+        "Longitude": 25.828274950590068
+    },
+    {
+        "Date": "09-29",
+        "Location": "2Rovaniemi",
         "Latitude": 66.527257,
         "Longitude": 25.823722
     },
@@ -18,64 +24,70 @@
         "Longitude": 25.79083
     },
     {
+        "Date": "09-29",
+        "Location": "48Sodakyla",
+        "Latitude": 67.4111903,
+        "Longitude": 26.5832745
+    },
+    {
         "Date": "09-30",
-        "Location": "4",
+        "Location": "35Ivalo",
+        "Latitude": 68.73573452776445,
+        "Longitude": 27.445074284392433
+    },
+    {
+        "Date": "09-30",
+        "Location": "34",
+        "Latitude": 68.8155259,
+        "Longitude": 27.3209568
+    },
+    {
+        "Date": "09-30",
+        "Location": "38Inari",
+        "Latitude": 68.906374,
+        "Longitude": 27.024863
+    },
+    {
+        "Date": "09-30",
+        "Location": "37",
+        "Latitude": 69.097617,
+        "Longitude": 27.191083
+    },
+    {
+        "Date": "09-30",
+        "Location": "33",
+        "Latitude": 69.27405196371755,
+        "Longitude": 26.789644361540308
+    },
+    {
+        "Date": "09-30",
+        "Location": "32玻璃屋",
+        "Latitude": 69.2922683,
+        "Longitude": 26.7234889
+    },
+    {
+        "Date": "10-01",
+        "Location": "4玻璃屋外",
         "Latitude": 69.2956063,
         "Longitude": 26.7116846
     },
     {
-        "Date": "09-30",
-        "Location": "5",
-        "Latitude": 69.39867282565537,
-        "Longitude": 25.85229565894664
+        "Date": "10-01",
+        "Location": "27芬蘭69度",
+        "Latitude": 69.39872136559238,
+        "Longitude": 25.85284591491769
     },
     {
-        "Date": "09-30",
-        "Location": "6",
-        "Latitude": 70.951994,
-        "Longitude": 25.711845
+        "Date": "10-01",
+        "Location": "26",
+        "Latitude": 69.4141866,
+        "Longitude": 25.799651
     },
     {
-        "Date": "09-30",
-        "Location": "7",
-        "Latitude": 70.999693,
-        "Longitude": 25.967945
-    },
-    {
-        "Date": "09-30",
-        "Location": "8",
-        "Latitude": 69.397917,
-        "Longitude": 25.855994
-    },
-    {
-        "Date": "09-30",
+        "Date": "10-01",
         "Location": "9",
         "Latitude": 69.431419,
         "Longitude": 25.740851
-    },
-    {
-        "Date": "09-30",
-        "Location": "10",
-        "Latitude": 71.1134073,
-        "Longitude": 25.8242859
-    },
-    {
-        "Date": "09-30",
-        "Location": "11",
-        "Latitude": 71.16915779365935,
-        "Longitude": 25.781036226155976
-    },
-    {
-        "Date": "09-30",
-        "Location": "12",
-        "Latitude": 71.169285,
-        "Longitude": 25.7811393
-    },
-    {
-        "Date": "09-30",
-        "Location": "13",
-        "Latitude": 71.16910824702882,
-        "Longitude": 25.781074207171102
     },
     {
         "Date": "10-01",
@@ -91,6 +103,30 @@
     },
     {
         "Date": "10-01",
+        "Location": "31",
+        "Latitude": 70.625673,
+        "Longitude": 25.308583
+    },
+    {
+        "Date": "10-01",
+        "Location": "25",
+        "Latitude": 70.87964584219574,
+        "Longitude": 25.826384098216185
+    },
+    {
+        "Date": "10-01",
+        "Location": "6",
+        "Latitude": 70.951994,
+        "Longitude": 25.711845
+    },
+    {
+        "Date": "10-01",
+        "Location": "7Honniesvag",
+        "Latitude": 70.999693,
+        "Longitude": 25.967945
+    },
+    {
+        "Date": "10-01",
         "Location": "16",
         "Latitude": 71.028175,
         "Longitude": 25.852355
@@ -103,9 +139,39 @@
     },
     {
         "Date": "10-01",
-        "Location": "18",
+        "Location": "22",
+        "Latitude": 71.0934349,
+        "Longitude": 25.7708516
+    },
+    {
+        "Date": "09-30",
+        "Location": "10Skarsvag",
+        "Latitude": 71.1134073,
+        "Longitude": 25.8242859
+    },
+    {
+        "Date": "10-01",
+        "Location": "23Skarsvag",
+        "Latitude": 71.11345764017898,
+        "Longitude": 25.82391588340829
+    },
+    {
+        "Date": "10-01",
+        "Location": "18Skarsvag",
         "Latitude": 71.1133276,
         "Longitude": 25.8241591
+    },
+    {
+        "Date": "10-01",
+        "Location": "20Skarsvag",
+        "Latitude": 71.113199,
+        "Longitude": 25.823569
+    },
+    {
+        "Date": "10-01",
+        "Location": "24Skarsvag",
+        "Latitude": 71.1133989,
+        "Longitude": 25.8240152
     },
     {
         "Date": "10-01",
@@ -115,33 +181,81 @@
     },
     {
         "Date": "10-01",
-        "Location": "20",
-        "Latitude": 71.113199,
-        "Longitude": 25.823569
+        "Location": "13",
+        "Latitude": 71.16910824702882,
+        "Longitude": 25.781074207171102
     },
     {
         "Date": "10-01",
-        "Location": "21",
+        "Location": "11北角",
+        "Latitude": 71.16915779365935,
+        "Longitude": 25.781036226155976
+    },
+    {
+        "Date": "10-01",
+        "Location": "12北角",
+        "Latitude": 71.169285,
+        "Longitude": 25.7811393
+    },
+    {
+        "Date": "10-01",
+        "Location": "21北角",
         "Latitude": 71.169535,
         "Longitude": 25.781703
     },
     {
         "Date": "10-01",
-        "Location": "22",
-        "Latitude": 71.0934349,
-        "Longitude": 25.7708516
+        "Location": "0北角地球",
+        "Latitude": 71.17103,
+        "Longitude": 25.78329
     },
     {
         "Date": "10-01",
-        "Location": "23",
-        "Latitude": 71.11345764017898,
-        "Longitude": 25.82391588340829
+        "Location": "21北角",
+        "Latitude": 71.169535,
+        "Longitude": 25.781703
     },
     {
-        "Date": "10-02",
-        "Location": "24",
-        "Latitude": 71.1133989,
-        "Longitude": 25.8240152
+        "Date": "09-30",
+        "Location": "12北角",
+        "Latitude": 71.169285,
+        "Longitude": 25.7811393
+    },
+    {
+        "Date": "09-30",
+        "Location": "13",
+        "Latitude": 71.16910824702882,
+        "Longitude": 25.781074207171102
+    },
+    {
+        "Date": "10-01",
+        "Location": "19",
+        "Latitude": 71.16906509269245,
+        "Longitude": 25.780684168851355
+    },
+    {
+        "Date": "10-01",
+        "Location": "17",
+        "Latitude": 71.043332,
+        "Longitude": 25.770516
+    },
+    {
+        "Date": "10-01",
+        "Location": "16",
+        "Latitude": 71.028175,
+        "Longitude": 25.852355
+    },
+    {
+        "Date": "09-30",
+        "Location": "7Honniesvag",
+        "Latitude": 70.999693,
+        "Longitude": 25.967945
+    },
+    {
+        "Date": "09-30",
+        "Location": "6",
+        "Latitude": 70.951994,
+        "Longitude": 25.711845
     },
     {
         "Date": "10-02",
@@ -151,45 +265,69 @@
     },
     {
         "Date": "10-02",
+        "Location": "31",
+        "Latitude": 70.625673,
+        "Longitude": 25.308583
+    },
+    {
+        "Date": "10-02",
+        "Location": "30挪威瀑布",
+        "Latitude": 70.625352,
+        "Longitude": 25.302804
+    },
+    {
+        "Date": "10-02",
+        "Location": "15",
+        "Latitude": 70.509076,
+        "Longitude": 25.061274
+    },
+    {
+        "Date": "10-02",
+        "Location": "14",
+        "Latitude": 70.475222,
+        "Longitude": 25.069304
+    },
+    {
+        "Date": "10-02",
+        "Location": "9",
+        "Latitude": 69.431419,
+        "Longitude": 25.740851
+    },
+    {
+        "Date": "10-02",
         "Location": "26",
         "Latitude": 69.4141866,
         "Longitude": 25.799651
     },
     {
         "Date": "10-02",
-        "Location": "27",
-        "Latitude": 69.39872136559238,
-        "Longitude": 25.85284591491769
+        "Location": "8芬蘭69度",
+        "Latitude": 69.397917,
+        "Longitude": 25.855994
     },
     {
         "Date": "10-02",
-        "Location": "28",
+        "Location": "5芬蘭69度",
+        "Latitude": 69.39867282565537,
+        "Longitude": 25.85229565894664
+    },
+    {
+        "Date": "10-02",
+        "Location": "32玻璃屋",
+        "Latitude": 69.2922683,
+        "Longitude": 26.7234889
+    },
+    {
+        "Date": "10-02",
+        "Location": "28小山丘",
         "Latitude": 69.291954,
         "Longitude": 26.722035
     },
     {
         "Date": "10-02",
-        "Location": "29",
+        "Location": "29德軍陣地",
         "Latitude": 69.292159,
         "Longitude": 26.720425
-    },
-    {
-        "Date": "10-02",
-        "Location": "30",
-        "Latitude": 70.625352,
-        "Longitude": 25.302804
-    },
-    {
-        "Date": "10-02",
-        "Location": "31",
-        "Latitude": 70.625673,
-        "Longitude": 25.308583
-    },
-    {
-        "Date": "10-03",
-        "Location": "32",
-        "Latitude": 69.2922683,
-        "Longitude": 26.7234889
     },
     {
         "Date": "10-03",
@@ -199,33 +337,9 @@
     },
     {
         "Date": "10-03",
-        "Location": "34",
-        "Latitude": 68.8155259,
-        "Longitude": 27.3209568
-    },
-    {
-        "Date": "10-03",
-        "Location": "35",
-        "Latitude": 68.73573452776445,
-        "Longitude": 27.445074284392433
-    },
-    {
-        "Date": "10-03",
         "Location": "36",
         "Latitude": 69.099648,
         "Longitude": 27.19127
-    },
-    {
-        "Date": "10-03",
-        "Location": "37",
-        "Latitude": 69.097617,
-        "Longitude": 27.191083
-    },
-    {
-        "Date": "10-03",
-        "Location": "38",
-        "Latitude": 68.906374,
-        "Longitude": 27.024863
     },
     {
         "Date": "10-03",
@@ -241,61 +355,115 @@
     },
     {
         "Date": "10-03",
-        "Location": "41",
-        "Latitude": 68.817951,
-        "Longitude": 27.31278
+        "Location": "34",
+        "Latitude": 68.8155259,
+        "Longitude": 27.3209568
+    },
+    {
+        "Date": "10-03",
+        "Location": "35",
+        "Latitude": 68.73573452776445,
+        "Longitude": 27.445074284392433
+    },
+    {
+        "Date": "10-03",
+        "Location": "63woodhouse",
+        "Latitude": 67.41806631718786,
+        "Longitude": 26.604928083746106
+    },
+    {
+        "Date": "10-03",
+        "Location": "64woodhouse",
+        "Latitude": 67.417934,
+        "Longitude": 26.605036
     },
     {
         "Date": "10-04",
-        "Location": "42",
-        "Latitude": 67.417591,
-        "Longitude": 26.604685
-    },
-    {
-        "Date": "10-04",
-        "Location": "43",
+        "Location": "43Sodankyla",
         "Latitude": 67.417952,
         "Longitude": 26.605034
     },
     {
         "Date": "10-04",
-        "Location": "44",
-        "Latitude": 67.038511,
-        "Longitude": 27.236065
+        "Location": "42Sodan",
+        "Latitude": 67.417591,
+        "Longitude": 26.604685
     },
     {
         "Date": "10-04",
-        "Location": "45",
-        "Latitude": 67.038528,
-        "Longitude": 27.235972
-    },
-    {
-        "Date": "10-04",
-        "Location": "46",
-        "Latitude": 67.059472,
-        "Longitude": 27.577718
-    },
-    {
-        "Date": "10-04",
-        "Location": "47",
-        "Latitude": 67.059473,
-        "Longitude": 27.577738
-    },
-    {
-        "Date": "10-05",
         "Location": "48",
         "Latitude": 67.4111903,
         "Longitude": 26.5832745
     },
     {
-        "Date": "10-05",
-        "Location": "49",
+        "Date": "10-04",
+        "Location": "49KURULA",
         "Latitude": 67.03916721436627,
         "Longitude": 27.234352248016794
     },
     {
+        "Date": "10-04",
+        "Location": "44KURULA",
+        "Latitude": 67.038511,
+        "Longitude": 27.236065
+    },
+    {
+        "Date": "10-04",
+        "Location": "45KURULA",
+        "Latitude": 67.038528,
+        "Longitude": 27.235972
+    },
+    {
+        "Date": "10-04",
+        "Location": "60",
+        "Latitude": 66.9613095,
+        "Longitude": 27.4994612
+    },
+    {
+        "Date": "10-04",
+        "Location": "58河沙洲",
+        "Latitude": 66.9632493,
+        "Longitude": 27.497923
+    },
+    {
+        "Date": "10-04",
+        "Location": "54河沙洲",
+        "Latitude": 66.963412,
+        "Longitude": 27.498082
+    },
+    {
+        "Date": "10-04",
+        "Location": "55河沙洲",
+        "Latitude": 66.963391,
+        "Longitude": 27.498022
+    },
+    {
+        "Date": "10-04",
+        "Location": "59",
+        "Latitude": 66.96129790205035,
+        "Longitude": 27.499450132728967
+    },
+    {
+        "Date": "10-04",
+        "Location": "47bird",
+        "Latitude": 67.059473,
+        "Longitude": 27.577738
+    },
+    {
         "Date": "10-05",
-        "Location": "50",
+        "Location": "61PELKO",
+        "Latitude": 67.10931138071592,
+        "Longitude": 27.517200168988737
+    },
+    {
+        "Date": "10-05",
+        "Location": "62PELKO",
+        "Latitude": 67.1093113,
+        "Longitude": 27.5171716
+    },
+    {
+        "Date": "10-05",
+        "Location": "50COFFEE",
         "Latitude": 67.189943,
         "Longitude": 27.452951
     },
@@ -307,85 +475,19 @@
     },
     {
         "Date": "10-05",
-        "Location": "52",
-        "Latitude": 67.344911,
-        "Longitude": 26.868582
-    },
-    {
-        "Date": "10-05",
-        "Location": "53",
-        "Latitude": 67.344911,
-        "Longitude": 26.868582
-    },
-    {
-        "Date": "10-05",
-        "Location": "54",
-        "Latitude": 66.963412,
-        "Longitude": 27.498082
-    },
-    {
-        "Date": "10-05",
-        "Location": "55",
-        "Latitude": 66.963391,
-        "Longitude": 27.498022
-    },
-    {
-        "Date": "10-05",
-        "Location": "56",
+        "Location": "56LAKE",
         "Latitude": 67.344862,
         "Longitude": 26.868488
     },
     {
         "Date": "10-05",
-        "Location": "57",
+        "Location": "57LAKE",
         "Latitude": 67.339392,
         "Longitude": 26.819963
     },
     {
         "Date": "10-05",
-        "Location": "58",
-        "Latitude": 66.9632493,
-        "Longitude": 27.497923
-    },
-    {
-        "Date": "10-05",
-        "Location": "59",
-        "Latitude": 66.96129790205035,
-        "Longitude": 27.499450132728967
-    },
-    {
-        "Date": "10-05",
-        "Location": "60",
-        "Latitude": 66.9613095,
-        "Longitude": 27.4994612
-    },
-    {
-        "Date": "10-05",
-        "Location": "61",
-        "Latitude": 67.10931138071592,
-        "Longitude": 27.517200168988737
-    },
-    {
-        "Date": "10-05",
-        "Location": "62",
-        "Latitude": 67.1093113,
-        "Longitude": 27.5171716
-    },
-    {
-        "Date": "10-05",
-        "Location": "63",
-        "Latitude": 67.41806631718786,
-        "Longitude": 26.604928083746106
-    },
-    {
-        "Date": "10-05",
-        "Location": "64",
-        "Latitude": 67.417934,
-        "Longitude": 26.605036
-    },
-    {
-        "Date": "10-05",
-        "Location": "65",
+        "Location": "65Sodan",
         "Latitude": 67.417987,
         "Longitude": 26.605066
     },
@@ -403,9 +505,21 @@
     },
     {
         "Date": "10-05",
-        "Location": "68",
+        "Location": "73",
+        "Latitude": 67.957334,
+        "Longitude": 23.683628
+    },
+    {
+        "Date": "10-05",
+        "Location": "68芬蘭",
         "Latitude": 67.9395023,
         "Longitude": 23.6655071
+    },
+    {
+        "Date": "10-05",
+        "Location": "72瑞典",
+        "Latitude": 67.940153,
+        "Longitude": 23.662114
     },
     {
         "Date": "10-05",
@@ -415,7 +529,7 @@
     },
     {
         "Date": "10-05",
-        "Location": "70",
+        "Location": "70松林湖",
         "Latitude": 67.5391391,
         "Longitude": 22.6448836
     },
@@ -424,18 +538,6 @@
         "Location": "71",
         "Latitude": 67.53981252760893,
         "Longitude": 22.643326638055157
-    },
-    {
-        "Date": "10-05",
-        "Location": "72",
-        "Latitude": 67.940153,
-        "Longitude": 23.662114
-    },
-    {
-        "Date": "10-05",
-        "Location": "73",
-        "Latitude": 67.957334,
-        "Longitude": 23.683628
     },
     {
         "Date": "10-06",
@@ -457,19 +559,19 @@
     },
     {
         "Date": "10-06",
-        "Location": "77",
+        "Location": "77ICEHOTEL",
         "Latitude": 67.84668204170576,
         "Longitude": 20.620380776062348
     },
     {
         "Date": "10-06",
-        "Location": "78",
+        "Location": "78ICE",
         "Latitude": 67.846498,
         "Longitude": 20.621399
     },
     {
         "Date": "10-06",
-        "Location": "79",
+        "Location": "79ICE",
         "Latitude": 67.846727,
         "Longitude": 20.620222
     },
@@ -556,6 +658,24 @@
         "Location": "93",
         "Latitude": 66.55809236093812,
         "Longitude": 25.828274950590068
+    },
+    {
+        "Date": "10-13",
+        "Location": "146",
+        "Latitude": 60.3162923,
+        "Longitude": 24.9616836
+    },
+    {
+        "Date": "10-13",
+        "Location": "145",
+        "Latitude": 60.24876270951527,
+        "Longitude": 24.862053111195703
+    },
+    {
+        "Date": "10-13",
+        "Location": "144",
+        "Latitude": 60.1774319,
+        "Longitude": 24.9389107
     },
     {
         "Date": "10-09",
