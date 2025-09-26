@@ -1,220 +1,291 @@
 <!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
-		<title>CardFramework</title>
-		<style>
-html, body, #canvas {
-	margin: 0;
-	padding: 0;
-	border: 0;
-}
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健康追蹤網站</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Charts Library -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, query, getDocs, orderBy, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-body {
-	color: white;
-	background-color: black;
-	overflow: hidden;
-	touch-action: none;
-}
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
 
-#canvas {
-	display: block;
-}
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-#canvas:focus {
-	outline: none;
-}
+        setLogLevel('debug');
 
-#status, #status-splash, #status-progress {
-	position: absolute;
-	left: 0;
-	right: 0;
-}
+        let userId = null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const apiKey = "";
 
-#status, #status-splash {
-	top: 0;
-	bottom: 0;
-}
+        async function signIn() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined') {
+                    const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                    userId = userCredential.user.uid;
+                } else {
+                    const userCredential = await signInAnonymously(auth);
+                    userId = userCredential.user.uid;
+                }
+                document.getElementById('status').textContent = '已登入。使用者 ID：' + userId;
+                return userId;
+            } catch (error) {
+                console.error("Firebase 登入失敗: ", error);
+                document.getElementById('status').textContent = '登入失敗。請檢查設定。';
+                return null;
+            }
+        }
+        
+        async function fetchDataAndDrawChart() {
+            if (!userId) {
+                await signIn();
+            }
+            if (!userId) return;
 
-#status {
-	background-color: #242424;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	visibility: hidden;
-}
+            const q = query(collection(db, 'artifacts', appId, 'users', userId, 'healthData'));
+            const querySnapshot = await getDocs(q);
+            const data = [];
+            querySnapshot.forEach((doc) => {
+                const docData = doc.data();
+                data.push({ date: doc.id, ...docData });
+            });
 
-#status-splash {
-	max-height: 100%;
-	max-width: 100%;
-	margin: auto;
-}
+            // Sort data by date
+            data.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-#status-splash.show-image--false {
-	display: none;
-}
+            // Display data in a list
+            const dataList = document.getElementById('data-list');
+            dataList.innerHTML = '';
+            if (data.length === 0) {
+                dataList.innerHTML = '<p class="text-gray-500 text-center">目前沒有數據。請輸入一些數據來開始追蹤吧！</p>';
+                document.getElementById('chart_div').style.display = 'none';
+            } else {
+                document.getElementById('chart_div').style.display = 'block';
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'p-2 bg-gray-50 rounded-lg shadow-sm mb-2';
+                    li.innerHTML = `
+                        <div class="font-semibold text-gray-800">${item.date}</div>
+                        <div class="text-sm text-gray-600">
+                            體重: ${item.weight ? item.weight + ' 公斤' : '無'} |
+                            血壓: ${item.bloodPressure ? item.bloodPressure : '無'} |
+                            心率: ${item.heartRate ? item.heartRate + ' bpm' : '無'} |
+                            飲水量: ${item.waterIntake ? item.waterIntake + ' ml' : '無'}
+                        </div>
+                    `;
+                    dataList.appendChild(li);
+                });
 
-#status-splash.fullsize--true {
-	height: 100%;
-	width: 100%;
-	object-fit: contain;
-}
+                // Draw the chart
+                google.charts.load('current', {'packages':['corechart']});
+                google.charts.setOnLoadCallback(function() {
+                    const chartData = [['日期', '體重 (kg)']];
+                    data.forEach(item => {
+                        if (item.weight) {
+                            chartData.push([item.date, item.weight]);
+                        }
+                    });
 
-#status-splash.use-filter--false {
-	image-rendering: pixelated;
-}
+                    if (chartData.length <= 1) {
+                         document.getElementById('chart_div').innerHTML = '<p class="text-gray-500 text-center">需要至少兩筆體重數據才能繪製圖表。</p>';
+                         return;
+                    }
 
-#status-progress, #status-notice {
-	display: none;
-}
+                    const dataTable = google.visualization.arrayToDataTable(chartData);
+                    const options = {
+                        title: '體重變化曲線圖',
+                        curveType: 'function',
+                        legend: { position: 'bottom' },
+                        colors: ['#3B82F6'],
+                        hAxis: { title: '日期' },
+                        vAxis: { title: '體重 (kg)' },
+                        chartArea: { width: '85%', height: '70%' }
+                    };
+                    const chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+                    chart.draw(dataTable, options);
+                });
+            }
+        }
 
-#status-progress {
-	bottom: 10%;
-	width: 50%;
-	margin: 0 auto;
-}
+        window.saveData = async function() {
+            if (!userId) {
+                await signIn();
+            }
 
-#status-notice {
-	background-color: #5b3943;
-	border-radius: 0.5rem;
-	border: 1px solid #9b3943;
-	color: #e0e0e0;
-	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
-	line-height: 1.3;
-	margin: 0 2rem;
-	overflow: hidden;
-	padding: 1rem;
-	text-align: center;
-	z-index: 1;
-}
-		</style>
-		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
-<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+            const weightInput = document.getElementById('weight').value;
+            const bloodPressureInput = document.getElementById('blood-pressure').value;
+            const heartRateInput = document.getElementById('heart-rate').value;
+            const waterIntakeInput = document.getElementById('water-intake').value;
+            const today = new Date().toISOString().slice(0, 10);
+            const timestamp = new Date();
 
-	</head>
-	<body>
-		<canvas id="canvas">
-			Your browser does not support the canvas tag.
-		</canvas>
+            if (!weightInput && !bloodPressureInput && !heartRateInput && !waterIntakeInput) {
+                document.getElementById('error-message').textContent = '請至少輸入一項數據！';
+                document.getElementById('error-message').classList.remove('hidden');
+                setTimeout(() => document.getElementById('error-message').classList.add('hidden'), 3000);
+                return;
+            }
 
-		<noscript>
-			Your browser does not support JavaScript.
-		</noscript>
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'users', userId, 'healthData', today);
+                const dataToSave = { timestamp: timestamp };
+                if (weightInput) dataToSave.weight = parseFloat(weightInput);
+                if (bloodPressureInput) dataToSave.bloodPressure = bloodPressureInput;
+                if (heartRateInput) dataToSave.heartRate = parseInt(heartRateInput, 10);
+                if (waterIntakeInput) dataToSave.waterIntake = parseInt(waterIntakeInput, 10);
 
-		<div id="status">
-			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
-			<progress id="status-progress"></progress>
-			<div id="status-notice"></div>
-		</div>
+                await setDoc(docRef, dataToSave, { merge: true });
 
-		<script src="index.js"></script>
-		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":840000,"index.wasm":52126319},"focusCanvas":true,"gdextensionLibs":[]};
-const GODOT_THREADS_ENABLED = false;
-const engine = new Engine(GODOT_CONFIG);
+                document.getElementById('message').textContent = '數據已成功儲存！';
+                document.getElementById('message').classList.remove('hidden');
+                setTimeout(() => document.getElementById('message').classList.add('hidden'), 3000);
 
-(function () {
-	const statusOverlay = document.getElementById('status');
-	const statusProgress = document.getElementById('status-progress');
-	const statusNotice = document.getElementById('status-notice');
+                // Refresh data display
+                fetchDataAndDrawChart();
+            } catch (e) {
+                console.error("寫入 Firestore 錯誤: ", e);
+                document.getElementById('message').textContent = '儲存失敗，請檢查主控台。';
+                document.getElementById('message').classList.add('text-red-700', 'bg-red-100');
+                document.getElementById('message').classList.remove('hidden');
+            }
+        }
+        
+        window.sendMessage = async function() {
+            const chatInput = document.getElementById('chat-input');
+            const chatMessage = chatInput.value.trim();
+            if (!chatMessage) return;
 
-	let initializing = true;
-	let statusMode = '';
+            const chatbox = document.getElementById('chat-box');
+            
+            // Add user message
+            const userMessageDiv = document.createElement('div');
+            userMessageDiv.className = 'flex justify-end mb-2';
+            userMessageDiv.innerHTML = `<div class="bg-blue-500 text-white p-2 rounded-lg max-w-xs">${chatMessage}</div>`;
+            chatbox.appendChild(userMessageDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
 
-	function setStatusMode(mode) {
-		if (statusMode === mode || !initializing) {
-			return;
-		}
-		if (mode === 'hidden') {
-			statusOverlay.remove();
-			initializing = false;
-			return;
-		}
-		statusOverlay.style.visibility = 'visible';
-		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
-		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
-		statusMode = mode;
-	}
+            chatInput.value = '';
 
-	function setStatusNotice(text) {
-		while (statusNotice.lastChild) {
-			statusNotice.removeChild(statusNotice.lastChild);
-		}
-		const lines = text.split('\n');
-		lines.forEach((line) => {
-			statusNotice.appendChild(document.createTextNode(line));
-			statusNotice.appendChild(document.createElement('br'));
-		});
-	}
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'flex justify-start mb-2';
+            loadingDiv.innerHTML = `<div class="bg-gray-200 text-gray-700 p-2 rounded-lg max-w-xs animate-pulse">思考中...</div>`;
+            chatbox.appendChild(loadingDiv);
+            chatbox.scrollTop = chatbox.scrollHeight;
 
-	function displayFailureNotice(err) {
-		console.error(err);
-		if (err instanceof Error) {
-			setStatusNotice(err.message);
-		} else if (typeof err === 'string') {
-			setStatusNotice(err);
-		} else {
-			setStatusNotice('An unknown error occurred.');
-		}
-		setStatusMode('notice');
-		initializing = false;
-	}
+            try {
+                const payload = {
+                    contents: [{ parts: [{ text: chatMessage }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: {
+                        parts: [{ text: "你是一位AI健康諮詢師。請提供簡潔、有幫助的健康建議，並盡可能根據用戶輸入的資訊給予個人化指導。回答應以友善和鼓勵的語氣呈現。" }]
+                    },
+                };
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                const sources = result?.candidates?.[0]?.groundingMetadata?.groundingAttributions?.map(attr => attr.web?.uri) || [];
+                
+                // Remove loading indicator
+                chatbox.removeChild(loadingDiv);
 
-	const missing = Engine.getMissingFeatures({
-		threads: GODOT_THREADS_ENABLED,
-	});
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.className = 'flex justify-start mb-2';
+                botMessageDiv.innerHTML = `<div class="bg-gray-200 text-gray-700 p-2 rounded-lg max-w-xs">${text}</div>`;
+                chatbox.appendChild(botMessageDiv);
+                chatbox.scrollTop = chatbox.scrollHeight;
+            } catch (error) {
+                console.error("AI 服務呼叫失敗:", error);
+                chatbox.removeChild(loadingDiv);
+                const errorMessageDiv = document.createElement('div');
+                errorMessageDiv.className = 'flex justify-start mb-2';
+                errorMessageDiv.innerHTML = `<div class="bg-red-200 text-red-700 p-2 rounded-lg max-w-xs">AI 服務出錯，請稍後再試。</div>`;
+                chatbox.appendChild(errorMessageDiv);
+                chatbox.scrollTop = chatbox.scrollHeight;
+            }
+        }
+        
+        window.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.id === 'chat-input') {
+                sendMessage();
+            }
+        });
 
-	if (missing.length !== 0) {
-		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
-			let serviceWorkerRegistrationPromise;
-			try {
-				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
-			} catch (err) {
-				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
-			}
-			// There's a chance that installing the service worker would fix the issue
-			Promise.race([
-				serviceWorkerRegistrationPromise.then((registration) => {
-					if (registration != null) {
-						return Promise.reject(new Error('Service worker already exists.'));
-					}
-					return registration;
-				}).then(() => engine.installServiceWorker()),
-				// For some reason, `getRegistration()` can stall
-				new Promise((resolve) => {
-					setTimeout(() => resolve(), 2000);
-				}),
-			]).then(() => {
-				// Reload if there was no error.
-				window.location.reload();
-			}).catch((err) => {
-				console.error('Error while registering service worker:', err);
-			});
-		} else {
-			// Display the message as usual
-			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
-			displayFailureNotice(missingMsg + missing.join('\n'));
-		}
-	} else {
-		setStatusMode('progress');
-		engine.startGame({
-			'onProgress': function (current, total) {
-				if (current > 0 && total > 0) {
-					statusProgress.value = current;
-					statusProgress.max = total;
-				} else {
-					statusProgress.removeAttribute('value');
-					statusProgress.removeAttribute('max');
-				}
-			},
-		}).then(() => {
-			setStatusMode('hidden');
-		}, displayFailureNotice);
-	}
-}());
-		</script>
-	</body>
+        // Initial sign-in and data fetch on page load
+        signIn().then(() => {
+            fetchDataAndDrawChart();
+        });
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center font-sans p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md my-4">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-800">健康追蹤</h1>
+        <p id="status" class="text-xs text-gray-500 text-center mb-4">正在登入...</p>
+        
+        <div class="space-y-4 mb-6">
+            <div>
+                <label for="weight" class="block text-gray-700 font-medium mb-1">體重 (公斤)</label>
+                <input type="number" id="weight" name="weight" placeholder="例如: 65.5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="blood-pressure" class="block text-gray-700 font-medium mb-1">血壓 (收縮壓/舒張壓)</label>
+                <input type="text" id="blood-pressure" name="blood-pressure" placeholder="例如: 120/80" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="heart-rate" class="block text-gray-700 font-medium mb-1">心率 (bpm)</label>
+                <input type="number" id="heart-rate" name="heart-rate" placeholder="例如: 75" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label for="water-intake" class="block text-gray-700 font-medium mb-1">飲水量 (ml)</label>
+                <input type="number" id="water-intake" name="water-intake" placeholder="例如: 2000" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+        
+        <button onclick="saveData()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+            儲存所有數據
+        </button>
+        
+        <div id="message" class="mt-4 p-3 text-sm text-center font-bold text-green-700 bg-green-100 rounded-lg hidden" role="alert">
+            <!-- 數據儲存成功/失敗訊息 -->
+        </div>
+        <div id="error-message" class="mt-4 p-3 text-sm text-center font-bold text-red-700 bg-red-100 rounded-lg hidden" role="alert">
+            <!-- 錯誤訊息 -->
+        </div>
+    </div>
+
+    <!-- Data Display and Chart Section -->
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md my-4">
+        <h2 class="text-xl font-bold mb-4 text-center text-gray-800">數據概覽</h2>
+        <div id="chart_div" class="w-full h-80 mb-4"></div>
+        <ul id="data-list" class="space-y-2">
+            <!-- Data will be loaded here -->
+        </ul>
+    </div>
+
+    <!-- AI Chat Section -->
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md my-4 flex flex-col h-96">
+        <h2 class="text-xl font-bold mb-4 text-center text-gray-800">AI 健康諮詢</h2>
+        <div id="chat-box" class="flex-grow overflow-y-auto mb-4 p-2 border border-gray-200 rounded-lg bg-gray-50 space-y-2">
+            <!-- Chat messages will be appended here -->
+        </div>
+        <div class="flex">
+            <input type="text" id="chat-input" placeholder="問問 AI 有關健康的建議..." class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="sendMessage()" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-r-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                傳送
+            </button>
+        </div>
+    </div>
+</body>
 </html>
-
