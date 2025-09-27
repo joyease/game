@@ -204,66 +204,98 @@
         </footer>
     </div>
 
-    <!-- JavaScript for Firebase, Data Submission, and Charting -->
-    <script type="module">
-        // 載入現代模組化 Firebase SDK
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <!-- JavaScript for Data Submission, and Charting (Now using localStorage) -->
+    <script>
         // -------------------------------------------------------------
-        // A. FIREBASE 初始化與環境變數
+        // A. 數據儲存機制 (使用 localStorage)
         // -------------------------------------------------------------
-        let db;
-        let auth;
-        let userId = 'loading'; // 用於追蹤認證狀態
-        
-        // 載入 Canvas 環境變數
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        let dailyData = {}; // 記憶體中的數據快取
 
         /**
-         * 初始化 Firebase 服務並進行使用者認證。
+         * 產生過去六天的模擬數據，並將今日數據留空。
+         * 模擬數據：
+         * 熱量 (Kcal): 1500, 1400, 1350, 1600, 1800, 2000 (D-6 到 D-1)
+         * 體重 (kg): 87.5, 88.2, 88.1, 89.0, 87.9, 88.6 (D-6 到 D-1)
          */
-        async function initializeFirebase() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                // 優先使用自訂令牌登入，若無則使用匿名登入
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                
-                // 取得使用者 ID (UID)
-                userId = auth.currentUser?.uid || crypto.randomUUID();
-                console.log("Firebase initialized. User ID:", userId);
-                
-                // 認證完成後，載入數據
-                document.getElementById('current-date').textContent = displayDate(new Date());
-                await fetchAndDrawCharts();
+        function generateMockData() {
+            // D-6, D-5, D-4, D-3, D-2, D-1
+            const mockCalories = [1500, 1400, 1350, 1600, 1800, 2000];
+            const mockWeight = [87.5, 88.2, 88.1, 89.0, 87.9, 88.6];
+            
+            // 重置 dailyData
+            dailyData = {};
 
-            } catch (error) {
-                showMessage(`Firebase 初始化或登入失敗: ${error.message}`, true);
-                console.error("Firebase Initialization Error:", error);
+            const today = new Date();
+            
+            // 迴圈從 6 天前 (i=6) 到 1 天前 (i=1)
+            for (let i = 6; i >= 1; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateKey = formatDate(date);
+                
+                // 索引從 0 開始
+                const index = 6 - i; 
+                
+                dailyData[dateKey] = {
+                    date: dateKey,
+                    'calories-eaten': mockCalories[index],
+                    'weight': mockWeight[index],
+                    // 假設其他數據為 0 或留空
+                    'calories-burned': 0,
+                    'steps': 0,
+                };
+            }
+            
+            // 今日 (D-0) 數據留空，等待使用者提交
+            dailyData[formatDate(today)] = dailyData[formatDate(today)] || { date: formatDate(today) };
+            
+            // 儲存模擬數據到 localStorage
+            saveDataToStorage();
+        }
+
+
+        /**
+         * 從瀏覽器的 localStorage 載入數據。
+         */
+        function loadDataFromStorage() {
+            try {
+                const storedData = localStorage.getItem('healthTrackerData');
+                let shouldGenerateMock = false;
+
+                if (storedData) {
+                    dailyData = JSON.parse(storedData);
+                    // 檢查數據是否真的為空（例如，只有一個空的 {}）
+                    if (Object.keys(dailyData).length === 0) {
+                        shouldGenerateMock = true;
+                    }
+                } else {
+                    shouldGenerateMock = true;
+                }
+
+                // 如果沒有數據，則產生模擬數據
+                if (shouldGenerateMock) {
+                    console.log("No data found or data is empty, generating mock data.");
+                    generateMockData();
+                }
+
+            } catch (e) {
+                console.error("Failed to load data from localStorage:", e);
+                dailyData = {};
+                showMessage("無法從本機儲存載入數據。", true);
+                generateMockData(); // 如果載入失敗，也產生模擬數據
             }
         }
         
         /**
-         * 建立私人數據集合的參照路徑。
-         * 路徑範例: artifacts/default-app-id/users/some-uid/daily_data
+         * 將數據儲存到瀏覽器的 localStorage。
          */
-        function getDailyDataCollectionRef() {
-            if (!db || userId === 'loading') {
-                // 如果 Firebase 或 User ID 尚未就緒，拋出錯誤以避免權限問題
-                throw new Error("Firestore 或使用者認證尚未就緒，請稍候。");
+        function saveDataToStorage() {
+            try {
+                localStorage.setItem('healthTrackerData', JSON.stringify(dailyData));
+            } catch (e) {
+                console.error("Failed to save data to localStorage:", e);
+                showMessage("數據儲存到本機失敗。", true);
             }
-            // 使用 Canvas 規範的私人資料路徑
-            return collection(db, `artifacts/${appId}/users/${userId}/daily_data`);
         }
 
 
@@ -312,19 +344,14 @@
 
 
         // -------------------------------------------------------------
-        // C. 數據儲存邏輯
+        // C. 數據儲存邏輯 (使用 localStorage)
         // -------------------------------------------------------------
         /**
-         * 將數據儲存到 Firestore，並更新前端顯示。
+         * 將數據儲存到 localStorage，並更新前端顯示。
          * @param {string} type - 數據類型 (e.g., 'calories-eaten').
          */
         window.updateData = async function(type) {
             try {
-                if (userId === 'loading') {
-                    showMessage('應用程式仍在初始化中，請稍候再提交。', true);
-                    return;
-                }
-
                 const inputId = `input-${type}`;
                 const displayId = `${type}-display`;
 
@@ -340,12 +367,12 @@
                 const value = parseFloat(newValue);
                 const today = formatDate(new Date());
 
-                // 1. 儲存數據到 Firestore (使用 setDoc 模組化函數)
-                const docRef = doc(getDailyDataCollectionRef(), today);
-                await setDoc(docRef, {
-                    [type]: value, // 使用計算屬性來動態設定欄位名稱
-                    date: today
-                }, { merge: true }); // 使用 merge: true 確保只更新特定欄位
+                // 1. 儲存數據到 in-memory object
+                if (!dailyData[today]) {
+                    dailyData[today] = { date: today };
+                }
+                dailyData[today][type] = value;
+                saveDataToStorage(); // 儲存到 localStorage
 
                 // 2. 更新前端顯示
                 let formattedValue;
@@ -357,14 +384,13 @@
                 displayElement.textContent = formattedValue;
                 inputElement.value = ''; // 清空輸入欄
                 
-                // 成功訊息：確認 Firestore 已就緒並完成寫入
-                showMessage(`${formattedValue} 數據已成功儲存！`);
+                // 成功訊息
+                showMessage(`${formattedValue} 數據已成功儲存到本機！`);
 
                 // 3. 重新繪製趨勢圖
                 await fetchAndDrawCharts();
 
             } catch (error) {
-                // 失敗訊息：通知使用者寫入失敗
                 showMessage(`儲存數據失敗：${error.message}`, true);
                 console.error("儲存數據失敗:", error);
             }
@@ -438,33 +464,11 @@
         }
 
         /**
-         * 從 Firestore 獲取數據並繪製圖表。同時更新今日數據的顯示。
+         * 從 in-memory 數據獲取數據並繪製圖表。同時更新今日數據的顯示。
          */
         async function fetchAndDrawCharts() {
             try {
-                // 確保 Firebase 認證已經完成
-                if (userId === 'loading') return;
-
-                // 1. 獲取最近 7 天數據 (使用模組化查詢)
-                const q = query(
-                    getDailyDataCollectionRef(), 
-                    orderBy("date", "desc"), // 依日期降序排列
-                    limit(7) // 僅取最近 7 天的數據
-                );
-
-                const snapshot = await getDocs(q);
-
-                const rawData = {};
-                let latestData = null; // 用來儲存最新一天的數據
-                
-                snapshot.forEach(doc => {
-                    rawData[doc.id] = doc.data();
-                    if (!latestData || doc.id > latestData.date) {
-                        latestData = { ...doc.data(), date: doc.id };
-                    }
-                });
-                
-                // 2. 準備 7 天的日期標籤
+                // 1. 準備 7 天的日期標籤
                 const dates = [];
                 const today = new Date();
                 // 獲取從 6 天前到今天的日期
@@ -474,43 +478,42 @@
                     dates.push(formatDate(date));
                 }
 
-                // 3. 整理圖表數據
+                // 2. 整理圖表數據
                 // Map 日期到對應的值，如果當天沒數據則為 null (Chart.js 會跳過)
-                const caloriesData = dates.map(d => rawData[d]?.['calories-eaten'] || null);
-                const weightData = dates.map(d => rawData[d]?.['weight'] || null);
+                const caloriesData = dates.map(d => dailyData[d]?.['calories-eaten'] || null);
+                const weightData = dates.map(d => dailyData[d]?.['weight'] || null);
                 
-                // 4. 繪製圖表
+                // 3. 繪製圖表
                 drawChart('caloriesChart', '攝取熱量 (Kcal)', dates, caloriesData);
                 drawChart('weightChart', '體重 (kg)', dates, weightData); 
                 
-                // 5. 更新今日活動數據顯示
-                if (latestData) {
-                    const todayKey = formatDate(new Date());
-                    const todayRecord = rawData[todayKey];
+                // 4. 更新今日活動數據顯示
+                const todayKey = formatDate(new Date());
+                const todayRecord = dailyData[todayKey];
 
-                    document.getElementById('calories-eaten-display').textContent = (todayRecord?.['calories-eaten'] ? Math.round(todayRecord['calories-eaten']).toLocaleString() : '--');
-                    document.getElementById('calories-burned-display').textContent = (todayRecord?.['calories-burned'] ? Math.round(todayRecord['calories-burned']).toLocaleString() : '--');
-                    document.getElementById('steps-display').textContent = (todayRecord?.['steps'] ? Math.round(todayRecord['steps']).toLocaleString() : '--');
-                    document.getElementById('weight-display').textContent = (todayRecord?.['weight'] ? todayRecord['weight'].toFixed(1) + ' kg' : '--');
-                } else {
-                    // 如果沒有任何數據，保持顯示 --
-                    ['calories-eaten-display', 'calories-burned-display', 'steps-display', 'weight-display'].forEach(id => {
-                        document.getElementById(id).textContent = '--';
-                    });
-                }
+                document.getElementById('calories-eaten-display').textContent = (todayRecord?.['calories-eaten'] ? Math.round(todayRecord['calories-eaten']).toLocaleString() : '--');
+                document.getElementById('calories-burned-display').textContent = (todayRecord?.['calories-burned'] ? Math.round(todayRecord['calories-burned']).toLocaleString() : '--');
+                document.getElementById('steps-display').textContent = (todayRecord?.['steps'] ? Math.round(todayRecord['steps']).toLocaleString() : '--');
+                document.getElementById('weight-display').textContent = (todayRecord?.['weight'] ? todayRecord['weight'].toFixed(1) + ' kg' : '--');
 
 
             } catch (error) {
-                // 如果是權限錯誤，則會在這裡被捕獲
                 showMessage(`載入數據失敗：${error.message}`, true);
                 console.error("獲取或繪製圖表失敗:", error);
             }
         }
 
-        // 頁面加載完成後，開始初始化 Firebase
-        window.onload = function() {
-            initializeFirebase();
-        };
+        /**
+         * 應用程式啟動時的初始化函數
+         */
+        function initializeApp() {
+            loadDataFromStorage(); // 載入本機數據 (包含首次載入時生成模擬數據的邏輯)
+            document.getElementById('current-date').textContent = displayDate(new Date());
+            fetchAndDrawCharts();
+        }
+
+        // 頁面加載完成後，開始初始化
+        window.onload = initializeApp;
     </script>
 </body>
 </html>
