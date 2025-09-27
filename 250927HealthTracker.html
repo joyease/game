@@ -51,12 +51,8 @@
             min-height: 100vh; 
         }
     </style>
-
-    <!-- 3. Firebase SDK (CDN 引入) -->
-    <!-- 引入 Firebase App 和 Firestore 相容版本 -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <!-- 4. Chart.js 圖表函式庫 CDN -->
+    
+    <!-- 3. Chart.js 圖表函式庫 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 
 </head>
@@ -73,6 +69,12 @@
                     </button>
                 </div>
             </header>
+            
+            <!-- Message Box (FIXED position for notifications) -->
+            <!-- 新增訊息框 UI 元素 -->
+            <div id="message-box" class="fixed top-16 left-0 right-0 z-50 px-4 transform transition-all duration-300 translate-y-[-100%] opacity-0">
+                <div id="message-content" class="rounded-lg p-3 text-sm font-medium shadow-xl flex items-center gap-2"></div>
+            </div>
 
             <!-- Main Content -->
             <main class="px-4 py-6">
@@ -82,7 +84,7 @@
                         <!-- 這是 Google Drive 檔案的直接內容連結 -->
                         <img alt="A person cycling on a scenic trail with mountains and a lake in the background."
                             class="w-full h-full object-cover"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpIJYNek9JfKAhBY6Kp1CUpHfaH8KYZHSO1Kk4OrwNVczmd-rvnmYSV784aQuklatPKpeO4Bowdz_Efz2jx1ArtyUy9-eYsnqhQVAyPnv9Fvudceed_z1IEQCBFqkWbl-7abLGHBbcZi6XkGP9562wELED1LmVS2Ca1uvkU2LCau6dVGZoN3H6W6utjbzj0lZzv8HYlYNtazLQ-49jv5iI-FAcA5Dgn9Wu6Ueify8HstTdTUS7o4HfOiKxPAiaC6VQEic-GZHQaZjh"/>
+                            src="https://drive.google.com/uc?export=view&id=1w_hb97OV2rZ0lFP0HQ8bPWHr45UZ3wJG"/>
                         <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
                             <h1 class="text-3xl font-bold text-white text-center">數據紀錄，一目了然</h1>
                         </div>
@@ -203,23 +205,67 @@
     </div>
 
     <!-- JavaScript for Firebase, Data Submission, and Charting -->
-    <script>
-        // -------------------------------------------------------------
-        // A. FIREBASE 初始化 (使用您提供的設定)
-        // -------------------------------------------------------------
-        const firebaseConfig = {
-            apiKey: "AIzaSyCRLh2DMPQSHXsugOk-VADaWnXiGZfcp4Q",
-            authDomain: "hermannhuang0005.firebaseapp.com",
-            projectId: "hermannhuang0005",
-            storageBucket: "hermannhuang0005.firebasestorage.app",
-            messagingSenderId: "919123267601",
-            appId: "1:919123267601:web:974ca64952b182afa821b0",
-            measurementId: "G-NDW0Y3DZ0N"
-        };
+    <script type="module">
+        // 載入現代模組化 Firebase SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 初始化 Firebase 和 Firestore
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // -------------------------------------------------------------
+        // A. FIREBASE 初始化與環境變數
+        // -------------------------------------------------------------
+        let db;
+        let auth;
+        let userId = 'loading'; // 用於追蹤認證狀態
+        
+        // 載入 Canvas 環境變數
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        /**
+         * 初始化 Firebase 服務並進行使用者認證。
+         */
+        async function initializeFirebase() {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // 優先使用自訂令牌登入，若無則使用匿名登入
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                
+                // 取得使用者 ID (UID)
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                console.log("Firebase initialized. User ID:", userId);
+                
+                // 認證完成後，載入數據
+                document.getElementById('current-date').textContent = displayDate(new Date());
+                await fetchAndDrawCharts();
+
+            } catch (error) {
+                showMessage(`Firebase 初始化或登入失敗: ${error.message}`, true);
+                console.error("Firebase Initialization Error:", error);
+            }
+        }
+        
+        /**
+         * 建立私人數據集合的參照路徑。
+         * 路徑範例: artifacts/default-app-id/users/some-uid/daily_data
+         */
+        function getDailyDataCollectionRef() {
+            if (!db || userId === 'loading') {
+                // 如果 Firebase 或 User ID 尚未就緒，拋出錯誤以避免權限問題
+                throw new Error("Firestore 或使用者認證尚未就緒，請稍候。");
+            }
+            // 使用 Canvas 規範的私人資料路徑
+            return collection(db, `artifacts/${appId}/users/${userId}/daily_data`);
+        }
+
 
         // -------------------------------------------------------------
         // B. 輔助工具
@@ -235,6 +281,36 @@
             return date.toLocaleDateString('zh-TW', options);
         }
 
+        /**
+         * 顯示一個短暫的通知訊息。
+         * @param {string} message - 要顯示的訊息內容。
+         * @param {boolean} isError - 如果為 true，則顯示為錯誤訊息。
+         */
+        function showMessage(message, isError = false) {
+            const box = document.getElementById('message-box');
+            const content = document.getElementById('message-content');
+            
+            // 設定顏色和圖標
+            if (isError) {
+                content.className = 'rounded-lg p-3 text-sm font-medium shadow-xl flex items-center gap-2 bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300';
+                content.innerHTML = '<span class="material-symbols-outlined">error</span> ' + message;
+            } else {
+                content.className = 'rounded-lg p-3 text-sm font-medium shadow-xl flex items-center gap-2 bg-primary/10 text-background-dark dark:bg-primary/30 dark:text-white';
+                content.innerHTML = '<span class="material-symbols-outlined">check_circle</span> ' + message;
+            }
+
+            // 顯示訊息
+            box.classList.remove('translate-y-[-100%]', 'opacity-0');
+            box.classList.add('translate-y-0', 'opacity-100');
+
+            // 3 秒後自動隱藏
+            setTimeout(() => {
+                box.classList.remove('translate-y-0', 'opacity-100');
+                box.classList.add('translate-y-[-100%]', 'opacity-0');
+            }, 3000);
+        }
+
+
         // -------------------------------------------------------------
         // C. 數據儲存邏輯
         // -------------------------------------------------------------
@@ -242,50 +318,54 @@
          * 將數據儲存到 Firestore，並更新前端顯示。
          * @param {string} type - 數據類型 (e.g., 'calories-eaten').
          */
-        async function updateData(type) {
-            const inputId = `input-${type}`;
-            const displayId = `${type}-display`;
-
-            const inputElement = document.getElementById(inputId);
-            const displayElement = document.getElementById(displayId);
-
-            if (!inputElement || !displayElement) return;
-
-            let newValue = inputElement.value.trim();
-            if (newValue === '' || isNaN(parseFloat(newValue))) {
-                // 使用自定義的訊息框而不是 alert()
-                console.error('請輸入有效的數值');
-                return;
-            }
-
-            const value = parseFloat(newValue);
-            const today = formatDate(new Date());
-
-            // 1. 儲存數據到 Firestore
+        window.updateData = async function(type) {
             try {
-                // 使用今天的日期作為文件 ID (Document ID) 確保每天只有一筆資料
-                await db.collection("daily_data").doc(today).set({
+                if (userId === 'loading') {
+                    showMessage('應用程式仍在初始化中，請稍候再提交。', true);
+                    return;
+                }
+
+                const inputId = `input-${type}`;
+                const displayId = `${type}-display`;
+
+                const inputElement = document.getElementById(inputId);
+                const displayElement = document.getElementById(displayId);
+
+                let newValue = inputElement.value.trim();
+                if (newValue === '' || isNaN(parseFloat(newValue))) {
+                    showMessage('請輸入有效的數值', true);
+                    return;
+                }
+
+                const value = parseFloat(newValue);
+                const today = formatDate(new Date());
+
+                // 1. 儲存數據到 Firestore (使用 setDoc 模組化函數)
+                const docRef = doc(getDailyDataCollectionRef(), today);
+                await setDoc(docRef, {
                     [type]: value, // 使用計算屬性來動態設定欄位名稱
                     date: today
                 }, { merge: true }); // 使用 merge: true 確保只更新特定欄位
 
-                // 2. 更新前端顯示 (保留原來的格式化邏輯)
+                // 2. 更新前端顯示
                 let formattedValue;
                 if (type === 'weight') {
-                    // 體重保留一位小數
                     formattedValue = `${value.toFixed(1)} kg`;
                 } else {
-                    // 其他數據使用千位分隔符
                     formattedValue = Math.round(value).toLocaleString();
                 }
                 displayElement.textContent = formattedValue;
                 inputElement.value = ''; // 清空輸入欄
-                console.log(`${type} 數據已成功儲存！`);
+                
+                // 成功訊息：確認 Firestore 已就緒並完成寫入
+                showMessage(`${formattedValue} 數據已成功儲存！`);
 
                 // 3. 重新繪製趨勢圖
                 await fetchAndDrawCharts();
 
             } catch (error) {
+                // 失敗訊息：通知使用者寫入失敗
+                showMessage(`儲存數據失敗：${error.message}`, true);
                 console.error("儲存數據失敗:", error);
             }
         }
@@ -362,11 +442,17 @@
          */
         async function fetchAndDrawCharts() {
             try {
-                // 1. 獲取最近 7 天數據
-                const snapshot = await db.collection("daily_data")
-                    .orderBy("date", "desc") // 依日期降序排列
-                    .limit(7) // 僅取最近 7 天的數據
-                    .get();
+                // 確保 Firebase 認證已經完成
+                if (userId === 'loading') return;
+
+                // 1. 獲取最近 7 天數據 (使用模組化查詢)
+                const q = query(
+                    getDailyDataCollectionRef(), 
+                    orderBy("date", "desc"), // 依日期降序排列
+                    limit(7) // 僅取最近 7 天的數據
+                );
+
+                const snapshot = await getDocs(q);
 
                 const rawData = {};
                 let latestData = null; // 用來儲存最新一天的數據
@@ -415,14 +501,15 @@
 
 
             } catch (error) {
+                // 如果是權限錯誤，則會在這裡被捕獲
+                showMessage(`載入數據失敗：${error.message}`, true);
                 console.error("獲取或繪製圖表失敗:", error);
             }
         }
 
-        // 頁面加載完成後，首次獲取數據並繪製圖表，並顯示當前日期
+        // 頁面加載完成後，開始初始化 Firebase
         window.onload = function() {
-            document.getElementById('current-date').textContent = displayDate(new Date());
-            fetchAndDrawCharts();
+            initializeFirebase();
         };
     </script>
 </body>
