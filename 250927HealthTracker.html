@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Health Tracker</title>
 
+    <!-- 1. TailwindCSS 載入 (標準 CDN 引入方式) -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <script>
         tailwind.config = {
@@ -30,11 +31,13 @@
         }
     </script>
 
+    <!-- 2. Google Fonts 和 Material Symbols 載入 -->
     <link href="https://fonts.googleapis.com" rel="preconnect"/>
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
 
+    <!-- Material Symbols Settings -->
     <style>
         .material-symbols-outlined {
             font-variation-settings:
@@ -48,13 +51,22 @@
             min-height: 100vh; 
         }
     </style>
+
+    <!-- 3. Firebase SDK (CDN 引入) -->
+    <!-- 引入 Firebase App 和 Firestore 相容版本 -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <!-- 4. Chart.js 圖表函式庫 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
 </head>
 <body class="font-display bg-background-light dark:bg-background-dark text-background-dark dark:text-background-light">
     <div class="relative flex min-h-screen flex-col justify-between">
         <div>
+            <!-- Header -->
             <header class="flex items-center justify-between p-4 bg-background-light dark:bg-background-dark sticky top-0 z-10 border-b border-primary/10">
                 <div class="w-12"></div>
-                <h1 class="flex-1 text-center text-lg font-bold">Health Tracker</h1>
+                <h1 class="flex-1 text-center text-lg font-bold">健康追蹤</h1>
                 <div class="flex w-12 items-center justify-end">
                     <button class="flex items-center justify-center rounded-full h-10 w-10">
                         <span class="material-symbols-outlined">settings</span>
@@ -62,131 +74,108 @@
                 </div>
             </header>
 
+            <!-- Main Content -->
             <main class="px-4 py-6">
+                <!-- Cover Image Section (使用 Google Drive 轉換後的 URL) -->
                 <section class="mb-8">
                     <div class="relative h-48 rounded-xl overflow-hidden mb-4 shadow-lg">
+                        <!-- 這是 Google Drive 檔案的直接內容連結 -->
                         <img alt="A person cycling on a scenic trail with mountains and a lake in the background."
                             class="w-full h-full object-cover"
-                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpIJYNek9JfKAhBY6Kp1CUpHfaH8KYZHSO1Kk4OrwNVczmd-rvnmYSV784aQuklatPKpeO4Bowdz_Efz2jx1ArtyUy9-eYsnqhQVAyPnv9Fvudceed_z1IEQCBFqkWbl-7abLGHBbcZi6XkGP9562wELED1LmVS2Ca1uvkU2LCau6dVGZoN3H6W6utjbzj0lZzv8HYlYNtazLQ-49jv5iI-FAcA5Dgn9Wu6Ueify8HstTdTUS7o4HfOiKxPAiaC6VQEic-GZHQaZjh"/>
+                            src="https://drive.google.com/uc?export=view&id=1w_hb97OV2rZ0lFP0HQ8bPWHr45UZ3wJG"/>
                         <div class="absolute inset-0 bg-black/30 flex items-center justify-center">
-                            <h1 class="text-3xl font-bold text-white text-center">健康追蹤<br/>Health Tracker</h1>
+                            <h1 class="text-3xl font-bold text-white text-center">數據紀錄，一目了然</h1>
                         </div>
                     </div>
                 </section>
 
+                <!-- Today's Activity (使用手機 2 欄 / 電腦 4 欄的響應式設計) -->
                 <section class="mb-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-bold">Today's Activity</h2>
-                        <p class="text-sm font-medium text-background-dark/70 dark:text-background-light/70">2023年10月27日 (星期五)</p>
+                        <h2 class="text-xl font-bold">今日活動</h2>
+                        <p class="text-sm font-medium text-background-dark/70 dark:text-background-light/70" id="current-date">載入中...</p>
                     </div>
                     
+                    <!-- 手機 2 欄 (grid-cols-2)，電腦 4 欄 (lg:grid-cols-4) -->
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         
+                        <!-- Calories Eaten -->
                         <div class="flex flex-col gap-1 rounded-lg p-4 bg-white dark:bg-background-dark/50 border border-primary/20 dark:border-primary/30 shadow-md">
-                            <p class="text-sm font-medium text-background-dark/70 dark:text-background-light/70">Calories Eaten</p>
-                            <p class="text-2xl font-bold" id="calories-eaten-display">1,850</p>
+                            <p class="text-sm font-medium text-background-dark/70 dark:text-background-light/70">攝取熱量 (Kcal)</p>
+                            <p class="text-2xl font-bold" id="calories-eaten-display">--</p>
                         </div>
                         
+                        <!-- Calories Burned -->
                         <div class="flex flex-col gap-1 rounded-lg p-4 bg-white dark:bg-background-dark/50 border border-primary/20 dark:border-primary/30 shadow-md">
-                            <p class="text-sm font-medium text-background-dark/70 dark:text-background-light/70">Calories Burned</p>
-                            <p class="text-2xl font-bold" id="calories-burned-display">2,150</p>
+                            <p class="text-sm font-medium text-background-dark/70 dark:text-background-light/70">消耗熱量 (Kcal)</p>
+                            <p class="text-2xl font-bold" id="calories-burned-display">--</p>
                         </div>
                         
+                        <!-- Steps -->
                         <div class="flex flex-col gap-1 rounded-lg p-4 bg-white dark:bg-background-dark/50 border border-primary/20 dark:border-primary/30 shadow-md">
-                            <p class="text-sm font-medium text-background-dark/70 dark:text-background-light/70">Steps</p>
-                            <p class="text-2xl font-bold" id="steps-display">8,250</p>
+                            <p class="text-sm font-medium text-background-dark/70 dark:text-background-light/70">步數</p>
+                            <p class="text-2xl font-bold" id="steps-display">--</p>
                         </div>
                         
+                        <!-- Weight -->
                         <div class="flex flex-col gap-1 rounded-lg p-4 bg-white dark:bg-background-dark/50 border border-primary/20 dark:border-primary/30 shadow-md">
-                            <p class="text-sm font-medium text-background-dark/70 dark:text-background-light/70">Weight</p>
-                            <p class="text-2xl font-bold" id="weight-display">68.5 kg</p>
+                            <p class="text-sm font-medium text-background-dark/70 dark:text-background-light/70">體重 (kg)</p>
+                            <p class="text-2xl font-bold" id="weight-display">--</p>
                         </div>
                     </div>
                 </section>
 
+                <!-- Trends Section (Chart.js Canvas) -->
                 <section class="mb-8">
-                    <h2 class="text-xl font-bold mb-4">Trends</h2>
+                    <h2 class="text-xl font-bold mb-4">趨勢圖表 (最近 7 天)</h2>
                     <div class="space-y-6">
+                        <!-- Calories Trend -->
                         <div class="flex flex-col gap-2 rounded-xl p-4 bg-white dark:bg-background-dark/50 border border-primary/20 dark:border-primary/30 shadow-md">
-                            <p class="text-base font-medium">Calories Eaten</p>
-                            <p class="text-3xl font-bold">12,500</p>
-                            <p class="text-sm font-normal text-background-dark/70 dark:text-background-light/70">Last 7 Days</p>
-                             <div class="flex flex-col gap-4 pt-4">
-                                <svg fill="none" height="120" preserveAspectRatio="none" viewBox="0 0 472 150" width="100%" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25V149H0V109Z" fill="url(#paint0_linear_steps)"></path>
-                                  <path class="text-primary" d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25" stroke="currentColor" stroke-linecap="round" stroke-width="3"></path>
-                                  <defs>
-                                    <linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear_steps" x1="236" x2="236" y1="1" y2="149">
-                                      <stop class="text-primary/30 dark:text-primary/20" stop-color="currentColor"></stop>
-                                      <stop class="text-primary/0" offset="1" stop-color="currentColor" stop-opacity="0"></stop>
-                                    </linearGradient>
-                                  </defs>
-                                </svg>
-                                <div class="flex justify-around">
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Mon</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Tue</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Wed</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Thu</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Fri</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Sat</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Sun</p>
-                                </div>
+                            <p class="text-base font-medium">熱量趨勢</p>
+                            <div class="pt-4">
+                                <canvas id="caloriesChart"></canvas>
                             </div>
                         </div>
 
+                        <!-- Weight Trend -->
                         <div class="flex flex-col gap-2 rounded-xl p-4 bg-white dark:bg-background-dark/50 border border-primary/20 dark:border-primary/30 shadow-md">
-                            <p class="text-base font-medium">Weight</p>
-                            <p class="text-3xl font-bold">68.5 kg</p>
-                            <p class="text-sm font-normal text-background-dark/70 dark:text-background-light/70">Last 7 Days</p>
-                            <div class="flex flex-col gap-4 pt-4">
-                                <svg fill="none" height="120" preserveAspectRatio="none" viewBox="0 0 472 150" width="100%" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M0 69C18.1538 69 18.1538 89 36.3077 89C54.4615 89 54.4615 79 72.6154 79C90.7692 79 90.7692 75 108.923 75C127.077 75 127.077 80 145.231 80C163.385 80 163.385 65 181.538 65C199.692 65 199.692 60 217.846 60C236 60 236 50 254.154 50C272.308 50 272.308 45 290.462 45C308.G15 45 308.615 50 326.769 50C344.923 50 344.923 40 363.077 40C381.231 40 381.231 35 399.385 35C417.538 35 417.538 45 435.692 45C453.846 45 453.846 30 472 30V149H0V69Z" fill="url(#paint0_linear_weight)"></path>
-                                  <path class="text-primary" d="M0 69C18.1538 69 18.1538 89 36.3077 89C54.4615 89 54.4615 79 72.6154 79C90.7692 79 90.7692 75 108.923 75C127.077 75 127.077 80 145.231 80C163.385 80 163.385 65 181.538 65C199.692 65 199.692 60 217.846 60C236 60 236 50 254.154 50C272.308 50 272.308 45 290.462 45C308.615 45 308.615 50 326.769 50C344.923 50 344.923 40 363.077 40C381.231 40 381.231 35 399.385 35C417.538 35 417.538 45 435.692 45C453.846 45 453.846 30 472 30" stroke="currentColor" stroke-linecap="round" stroke-width="3"></path>
-                                  <defs>
-                                    <linearGradient gradientUnits="userSpaceOnUse" id="paint0_linear_weight" x1="236" x2="236" y1="30" y2="149">
-                                      <stop class="text-primary/30 dark:text-primary/20" stop-color="currentColor"></stop>
-                                      <stop class="text-primary/0" offset="1" stop-color="currentColor" stop-opacity="0"></stop>
-                                    </linearGradient>
-                                  </defs>
-                                </svg>
-                                <div class="flex justify-around">
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Mon</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Tue</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Wed</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Thu</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Fri</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Sat</p>
-                                    <p class="text-xs font-bold text-background-dark/50 dark:text-background-light/50">Sun</p>
-                                </div>
+                            <p class="text-base font-medium">體重趨勢</p>
+                            <div class="pt-4">
+                                <canvas id="weightChart"></canvas>
                             </div>
                         </div>
                     </div>
                 </section>
 
+                <!-- Data Input Section -->
                 <section class="mb-8">
-                    <h2 class="text-xl font-bold mb-4">Data Input</h2>
+                    <h2 class="text-xl font-bold mb-4">數據輸入</h2>
                     <div class="space-y-4">
+                        <!-- Input Field: Calories Eaten -->
                         <div class="flex items-center gap-2">
-                            <label for="input-calories-eaten" class="w-1/3 text-sm font-medium">Calories Eaten</label>
-                            <input type="number" id="input-calories-eaten" placeholder="e.g. 1850" class="flex-grow rounded-md border border-primary/30 p-2 dark:bg-background-dark/50 focus:border-primary focus:ring-primary"/>
+                            <label for="input-calories-eaten" class="w-1/3 text-sm font-medium">攝取熱量</label>
+                            <input type="number" id="input-calories-eaten" placeholder="例如: 1850" class="flex-grow rounded-md border border-primary/30 p-2 dark:bg-background-dark/50 focus:border-primary focus:ring-primary"/>
                             <button onclick="updateData('calories-eaten')" class="bg-primary text-background-dark font-bold py-2 px-4 rounded-md hover:bg-primary/80 transition duration-150">提交</button>
                         </div>
 
+                        <!-- Input Field: Calories Burned -->
                         <div class="flex items-center gap-2">
-                            <label for="input-calories-burned" class="w-1/3 text-sm font-medium">Calories Burned</label>
-                            <input type="number" id="input-calories-burned" placeholder="e.g. 2150" class="flex-grow rounded-md border border-primary/30 p-2 dark:bg-background-dark/50 focus:border-primary focus:ring-primary"/>
+                            <label for="input-calories-burned" class="w-1/3 text-sm font-medium">消耗熱量</label>
+                            <input type="number" id="input-calories-burned" placeholder="例如: 2150" class="flex-grow rounded-md border border-primary/30 p-2 dark:bg-background-dark/50 focus:border-primary focus:ring-primary"/>
                             <button onclick="updateData('calories-burned')" class="bg-primary text-background-dark font-bold py-2 px-4 rounded-md hover:bg-primary/80 transition duration-150">提交</button>
                         </div>
 
+                        <!-- Input Field: Steps -->
                         <div class="flex items-center gap-2">
-                            <label for="input-steps" class="w-1/3 text-sm font-medium">Steps</label>
-                            <input type="number" id="input-steps" placeholder="e.g. 8250" class="flex-grow rounded-md border border-primary/30 p-2 dark:bg-background-dark/50 focus:border-primary focus:ring-primary"/>
+                            <label for="input-steps" class="w-1/3 text-sm font-medium">步數</label>
+                            <input type="number" id="input-steps" placeholder="例如: 8250" class="flex-grow rounded-md border border-primary/30 p-2 dark:bg-background-dark/50 focus:border-primary focus:ring-primary"/>
                             <button onclick="updateData('steps')" class="bg-primary text-background-dark font-bold py-2 px-4 rounded-md hover:bg-primary/80 transition duration-150">提交</button>
                         </div>
 
+                        <!-- Input Field: Weight -->
                         <div class="flex items-center gap-2">
-                            <label for="input-weight" class="w-1/3 text-sm font-medium">Weight (kg)</label>
-                            <input type="number" step="0.1" id="input-weight" placeholder="e.g. 68.5" class="flex-grow rounded-md border border-primary/30 p-2 dark:bg-background-dark/50 focus:border-primary focus:ring-primary"/>
+                            <label for="input-weight" class="w-1/3 text-sm font-medium">體重 (kg)</label>
+                            <input type="number" step="0.1" id="input-weight" placeholder="例如: 68.5" class="flex-grow rounded-md border border-primary/30 p-2 dark:bg-background-dark/50 focus:border-primary focus:ring-primary"/>
                             <button onclick="updateData('weight')" class="bg-primary text-background-dark font-bold py-2 px-4 rounded-md hover:bg-primary/80 transition duration-150">提交</button>
                         </div>
                     </div>
@@ -194,41 +183,66 @@
             </main>
         </div>
 
+        <!-- Footer -->
         <footer class="sticky bottom-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm mt-8">
             <nav class="flex justify-around items-center border-t border-primary/20 dark:border-primary/30 px-2 pt-2 pb-4">
                 <a class="flex flex-col items-center gap-1 text-primary" href="#">
                     <span class="material-symbols-outlined text-3xl">home</span>
-                    <p class="text-xs font-bold">Home</p>
+                    <p class="text-xs font-bold">首頁</p>
                 </a>
                 <a class="flex flex-col items-center gap-1 text-background-dark/50 dark:text-background-light/50" href="#">
                     <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 0">favorite</span>
-                    <p class="text-xs font-medium">Activity</p>
+                    <p class="text-xs font-medium">活動</p>
                 </a>
                 <a class="flex flex-col items-center gap-1 text-background-dark/50 dark:text-background-light/50" href="#">
                     <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 0">person</span>
-                    <p class="text-xs font-medium">Profile</p>
+                    <p class="text-xs font-medium">個人檔案</p>
                 </a>
             </nav>
         </footer>
     </div>
 
+    <!-- JavaScript for Firebase, Data Submission, and Charting -->
     <script>
-        /**
-         * Helper function to format numbers with commas (千位分隔符)
-         * @param {string} value - The numerical string to format.
-         * @returns {string} The formatted string.
-         */
-        function formatNumber(value) {
-            // Remove non-digit/non-decimal characters, then format as a string
-            return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        // -------------------------------------------------------------
+        // A. FIREBASE 初始化 (使用您提供的設定)
+        // -------------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyCRLh2DMPQSHXsugOk-VADaWnXiGZfcp4Q",
+            authDomain: "hermannhuang0005.firebaseapp.com",
+            projectId: "hermannhuang0005",
+            storageBucket: "hermannhuang0005.firebasestorage.app",
+            messagingSenderId: "919123267601",
+            appId: "1:919123267601:web:974ca64952b182afa821b0",
+            measurementId: "G-NDW0Y3DZ0N"
+        };
+
+        // 初始化 Firebase 和 Firestore
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // -------------------------------------------------------------
+        // B. 輔助工具
+        // -------------------------------------------------------------
+        function formatDate(date) {
+            // 將日期格式化為 YYYY-MM-DD
+            return date.toISOString().split('T')[0];
         }
 
+        function displayDate(date) {
+            // 顯示格式：YYYY年MM月DD日 (星期X)
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            return date.toLocaleDateString('zh-TW', options);
+        }
+
+        // -------------------------------------------------------------
+        // C. 數據儲存邏輯
+        // -------------------------------------------------------------
         /**
-         * Updates the display element with the new value from the corresponding input field.
-         * @param {string} type - The data type to update (e.g., 'calories-eaten', 'weight').
+         * 將數據儲存到 Firestore，並更新前端顯示。
+         * @param {string} type - 數據類型 (e.g., 'calories-eaten').
          */
-        function updateData(type) {
-            // 1. Get the input field and display element IDs
+        async function updateData(type) {
             const inputId = `input-${type}`;
             const displayId = `${type}-display`;
 
@@ -237,31 +251,179 @@
 
             if (!inputElement || !displayElement) return;
 
-            // 2. Get the new value
             let newValue = inputElement.value.trim();
-
-            // Check if the input is empty or invalid
             if (newValue === '' || isNaN(parseFloat(newValue))) {
-                alert('請輸入有效的數值');
+                // 使用自定義的訊息框而不是 alert()
+                console.error('請輸入有效的數值');
                 return;
             }
 
-            // 3. Format the value and update the display
-            let formattedValue;
+            const value = parseFloat(newValue);
+            const today = formatDate(new Date());
 
-            if (type === 'weight') {
-                // Weight: Keep one decimal place and add 'kg'
-                formattedValue = `${parseFloat(newValue).toFixed(1)} kg`;
-            } else {
-                // Calories and Steps: Format with commas and remove decimals
-                formattedValue = formatNumber(Math.round(parseFloat(newValue)));
+            // 1. 儲存數據到 Firestore
+            try {
+                // 使用今天的日期作為文件 ID (Document ID) 確保每天只有一筆資料
+                await db.collection("daily_data").doc(today).set({
+                    [type]: value, // 使用計算屬性來動態設定欄位名稱
+                    date: today
+                }, { merge: true }); // 使用 merge: true 確保只更新特定欄位
+
+                // 2. 更新前端顯示 (保留原來的格式化邏輯)
+                let formattedValue;
+                if (type === 'weight') {
+                    // 體重保留一位小數
+                    formattedValue = `${value.toFixed(1)} kg`;
+                } else {
+                    // 其他數據使用千位分隔符
+                    formattedValue = Math.round(value).toLocaleString();
+                }
+                displayElement.textContent = formattedValue;
+                inputElement.value = ''; // 清空輸入欄
+                console.log(`${type} 數據已成功儲存！`);
+
+                // 3. 重新繪製趨勢圖
+                await fetchAndDrawCharts();
+
+            } catch (error) {
+                console.error("儲存數據失敗:", error);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // D. 趨勢圖繪製邏輯
+        // -------------------------------------------------------------
+        let caloriesChartInstance;
+        let weightChartInstance;
+
+        /**
+         * 繪製 Chart.js 圖表。
+         * @param {string} canvasId - Canvas 元素的 ID.
+         * @param {string} label - 圖表的標籤.
+         * @param {Array} dates - 日期標籤 (x 軸).
+         * @param {Array} data - 數值資料 (y 軸).
+         */
+        function drawChart(canvasId, label, dates, data) {
+            const ctx = document.getElementById(canvasId);
+            
+            // 銷毀舊圖表實例 (避免重複繪製錯誤)
+            let chartInstance = (canvasId === 'caloriesChart' ? caloriesChartInstance : weightChartInstance);
+            if (chartInstance) {
+                chartInstance.destroy();
             }
 
-            displayElement.textContent = formattedValue;
+            const newChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    // 僅顯示月/日
+                    labels: dates.map(d => d.substring(5)), 
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        borderColor: '#19e65e', // Primary color
+                        backgroundColor: 'rgba(25, 230, 94, 0.1)',
+                        tension: 0.4, // 曲線平滑
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // 允許 Canvas 調整高度
+                    plugins: {
+                        legend: { display: false } // 隱藏圖例
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(25, 230, 94, 0.1)', // 網格線顏色
+                            },
+                        },
+                        x: {
+                            grid: {
+                                display: false // 隱藏 X 軸網格線
+                            }
+                        }
+                    }
+                }
+            });
 
-            // 4. Clear the input field after submission
-            inputElement.value = '';
+            if (canvasId === 'caloriesChart') {
+                caloriesChartInstance = newChartInstance;
+            } else {
+                weightChartInstance = newChartInstance;
+            }
         }
+
+        /**
+         * 從 Firestore 獲取數據並繪製圖表。同時更新今日數據的顯示。
+         */
+        async function fetchAndDrawCharts() {
+            try {
+                // 1. 獲取最近 7 天數據
+                const snapshot = await db.collection("daily_data")
+                    .orderBy("date", "desc") // 依日期降序排列
+                    .limit(7) // 僅取最近 7 天的數據
+                    .get();
+
+                const rawData = {};
+                let latestData = null; // 用來儲存最新一天的數據
+                
+                snapshot.forEach(doc => {
+                    rawData[doc.id] = doc.data();
+                    if (!latestData || doc.id > latestData.date) {
+                        latestData = { ...doc.data(), date: doc.id };
+                    }
+                });
+                
+                // 2. 準備 7 天的日期標籤
+                const dates = [];
+                const today = new Date();
+                // 獲取從 6 天前到今天的日期
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() - i);
+                    dates.push(formatDate(date));
+                }
+
+                // 3. 整理圖表數據
+                // Map 日期到對應的值，如果當天沒數據則為 null (Chart.js 會跳過)
+                const caloriesData = dates.map(d => rawData[d]?.['calories-eaten'] || null);
+                const weightData = dates.map(d => rawData[d]?.['weight'] || null);
+                
+                // 4. 繪製圖表
+                drawChart('caloriesChart', '攝取熱量 (Kcal)', dates, caloriesData);
+                drawChart('weightChart', '體重 (kg)', dates, weightData); 
+                
+                // 5. 更新今日活動數據顯示
+                if (latestData) {
+                    const todayKey = formatDate(new Date());
+                    const todayRecord = rawData[todayKey];
+
+                    document.getElementById('calories-eaten-display').textContent = (todayRecord?.['calories-eaten'] ? Math.round(todayRecord['calories-eaten']).toLocaleString() : '--');
+                    document.getElementById('calories-burned-display').textContent = (todayRecord?.['calories-burned'] ? Math.round(todayRecord['calories-burned']).toLocaleString() : '--');
+                    document.getElementById('steps-display').textContent = (todayRecord?.['steps'] ? Math.round(todayRecord['steps']).toLocaleString() : '--');
+                    document.getElementById('weight-display').textContent = (todayRecord?.['weight'] ? todayRecord['weight'].toFixed(1) + ' kg' : '--');
+                } else {
+                    // 如果沒有任何數據，保持顯示 --
+                    ['calories-eaten-display', 'calories-burned-display', 'steps-display', 'weight-display'].forEach(id => {
+                        document.getElementById(id).textContent = '--';
+                    });
+                }
+
+
+            } catch (error) {
+                console.error("獲取或繪製圖表失敗:", error);
+            }
+        }
+
+        // 頁面加載完成後，首次獲取數據並繪製圖表，並顯示當前日期
+        window.onload = function() {
+            document.getElementById('current-date').textContent = displayDate(new Date());
+            fetchAndDrawCharts();
+        };
     </script>
 </body>
 </html>
