@@ -2,12 +2,12 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>體重變化曲線圖（最近10筆）</title>
+  <title>體重變化曲線圖（最近10筆，點上顯示日期與詳細資料）</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 </head>
 <body>
-  <h2>體重變化曲線圖（最近10筆，點上顯示日期）</h2>
+  <h2>體重變化曲線圖（最近10筆，點上顯示日期與詳細資料）</h2>
   <canvas id="weightChart" width="800" height="400"></canvas>
 
   <script>
@@ -27,7 +27,11 @@
       const labels = Array.from({length: data.length}, (_, i) => i + 1);
       const datasetData = data.map(item => ({
         y: item.weight,
-        date: item.date
+        date: item.date,
+        sleep: item.sleep,
+        steps: item.steps,
+        calories: item.calories,
+        water: item.water
       }));
 
       const ctx = document.getElementById('weightChart').getContext('2d');
@@ -65,8 +69,14 @@
             tooltip: {
               callbacks: {
                 label: function(context) {
-                  const dataPoint = context.dataset.data[context.dataIndex];
-                  return `日期: ${dataPoint.date}\n體重: ${dataPoint.y} kg`;
+                  const d = context.dataset.data[context.dataIndex];
+                  return [
+                    `體重: ${d.y} kg`,
+                    `睡眠: ${d.sleep} 小時`,
+                    `步數: ${d.steps}`,
+                    `卡路里: ${d.calories} Kcal`,
+                    `飲水: ${d.water} 杯`
+                  ];
                 }
               }
             }
