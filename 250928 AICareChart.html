@@ -2,12 +2,12 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>體重變化曲線圖（最近15筆，點擊顯示完整資料）</title>
+  <title>體重變化曲線圖（最近10筆）</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h2>體重變化曲線圖（最近15筆）</h2>
-  <canvas id="weightChart" width="900" height="450"></canvas>
+  <h2>體重變化曲線圖（最近10筆）</h2>
+  <canvas id="weightChart" width="800" height="400"></canvas>
 
   <script>
     async function fetchData() {
@@ -19,83 +19,19 @@
     async function createChart() {
       let data = await fetchData();
 
-      // 取最新15筆資料
-      if (data.length > 15) {
-        data = data.slice(data.length - 15);
+      // 取最後10筆資料
+      if (data.length > 10) {
+        data = data.slice(data.length - 10);
       }
 
-      // X軸標籤 1~15
       const labels = Array.from({length: data.length}, (_, i) => i + 1);
 
-      // 用物件形式，組成資料集時傳入額外欄位作為tooltip顯示內容用
-      const chartData = data.map(item => ({
-        x: null, // 用labels做X軸，不需單獨設定x
+      // 這邊把資料點改成對應權重，並且附帶完整資料作顯示
+      const datasetData = data.map(item => ({
         y: item.weight,
-        fullData: item    // 把完整item資料綁定在該點上
+        date: item.date  // 附加日期供 tooltip 顯示
       }));
 
       const ctx = document.getElementById('weightChart').getContext('2d');
-
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: '體重 (kg)',
-            data: chartData,
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            fill: true,
-            tension: 0.2,
-            pointRadius: 5,
-            pointHoverRadius: 7
-          }]
-        },
-        options: {
-          interaction: {
-            mode: 'nearest',
-            intersect: true
-          },
-          plugins: {
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  // 取出綁定的完整資料
-                  const item = context.dataset.data[context.dataIndex].fullData;
-                  return [
-                    `日期: ${item.date}`,
-                    `體重: ${item.weight} kg`,
-                    `睡眠: ${item.sleep} 小時`,
-                    `步數: ${item.steps}`,
-                    `熱量: ${item.calories} Kcal`,
-                    `飲水: ${item.water} 杯`
-                  ];
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: '筆數'
-              }
-            },
-            y: {
-              beginAtZero: false,
-              title: {
-                display: true,
-                text: '體重(kg)'
-              }
-            }
-          }
-        }
-      });
-    }
-
-    createChart();
-  </script>
-</body>
-</html>
-
+      new Chart(ctx
 
