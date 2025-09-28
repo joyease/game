@@ -2,12 +2,12 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>體重變化曲線圖</title>
+  <title>體重變化曲線圖（最近15筆）</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h2>體重變化曲線圖（最近10筆）</h2>
-  <canvas id="weightChart" width="800" height="400"></canvas>
+  <h2>體重變化曲線圖（最近15筆）</h2>
+  <canvas id="weightChart" width="900" height="450"></canvas>
 
   <script>
     async function fetchData() {
@@ -19,30 +19,56 @@
     async function createChart() {
       let data = await fetchData();
 
-      // 取得最後10筆
-      if (data.length > 10) {
-        data = data.slice(data.length - 10);
+      if (data.length > 15) {
+        data = data.slice(data.length - 15);
       }
 
-      // X軸標籤 1~10
       const labels = Array.from({length: data.length}, (_, i) => i + 1);
-      const weights = data.map(item => item.weight);
+
+      const chartData = data.map(item => ({
+        y: item.weight,
+        fullData: item
+      }));
 
       const ctx = document.getElementById('weightChart').getContext('2d');
+
       new Chart(ctx, {
         type: 'line',
         data: {
           labels: labels,
           datasets: [{
             label: '體重 (kg)',
-            data: weights,
+            data: chartData,
             borderColor: 'rgba(75, 192, 192, 1)',
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             fill: true,
-            tension: 0.2
+            tension: 0.2,
+            pointRadius: 5,
+            pointHoverRadius: 7
           }]
         },
         options: {
+          interaction: {
+            mode: 'nearest',
+            intersect: true
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const item = context.dataset.data[context.dataIndex].fullData;
+                  return [
+                    `日期: ${item.date}`,
+                    `體重: ${item.weight} kg`,
+                    `睡眠: ${item.sleep} 小時`,
+                    `步數: ${item.steps}`,
+                    `熱量: ${item.calories} Kcal`,
+                    `飲水: ${item.water} 杯`
+                  ];
+                }
+              }
+            }
+          },
           scales: {
             x: {
               title: {
@@ -66,3 +92,4 @@
   </script>
 </body>
 </html>
+
