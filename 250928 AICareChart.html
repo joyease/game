@@ -2,12 +2,11 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>體重變化曲線圖（最近10筆，點上顯示日期與詳細資料）</title>
+  <title>體重變化曲線圖（最近15筆）</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 </head>
 <body>
-  <h2>體重變化曲線圖（最近10筆，點上顯示日期與詳細資料）</h2>
+  <h2>體重變化曲線圖（最近15筆）</h2>
   <canvas id="weightChart" width="800" height="400"></canvas>
 
   <script>
@@ -20,14 +19,16 @@
     async function createChart() {
       let data = await fetchData();
 
-      if (data.length > 10) {
-        data = data.slice(data.length - 10);
+      // 取最後15筆
+      if (data.length > 15) {
+        data = data.slice(data.length - 15);
       }
 
       const labels = Array.from({length: data.length}, (_, i) => i + 1);
+
+      // 改成物件陣列，包含更多欄位給tooltip用
       const datasetData = data.map(item => ({
         y: item.weight,
-        date: item.date,
         sleep: item.sleep,
         steps: item.steps,
         calories: item.calories,
@@ -35,9 +36,6 @@
       }));
 
       const ctx = document.getElementById('weightChart').getContext('2d');
-
-      Chart.register(window['ChartDataLabels']); // 註冊plugin
-
       new Chart(ctx, {
         type: 'line',
         data: {
@@ -45,8 +43,8 @@
           datasets: [{
             label: '體重 (kg)',
             data: datasetData,
-            borderColor: 'rgba(75,192,192,1)',
-            backgroundColor: 'rgba(75,192,192,0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
             fill: true,
             tension: 0.2,
             pointRadius: 5,
@@ -54,33 +52,6 @@
           }]
         },
         options: {
-          plugins: {
-            datalabels: {
-              align: 'top',
-              formatter: function(value) {
-                return value.date; // 顯示日期
-              },
-              font: {
-                weight: 'bold'
-              },
-              color: '#666',
-              offset: 6
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const d = context.dataset.data[context.dataIndex];
-                  return [
-                    `體重: ${d.y} kg`,
-                    `睡眠: ${d.sleep} 小時`,
-                    `步數: ${d.steps}`,
-                    `卡路里: ${d.calories} Kcal`,
-                    `飲水: ${d.water} 杯`
-                  ];
-                }
-              }
-            }
-          },
           scales: {
             x: {
               title: {
@@ -96,12 +67,27 @@
               }
             }
           },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const d = context.dataset.data[context.dataIndex];
+                  return [
+                    `體重: ${d.y} kg`,
+                    `睡眠: ${d.sleep} 小時`,
+                    `步數: ${d.steps}`,
+                    `卡路里: ${d.calories} Kcal`,
+                    `飲水: ${d.water} 杯`
+                  ];
+                }
+              }
+            }
+          },
           interaction: {
             mode: 'nearest',
             intersect: true
           }
-        },
-        plugins: [ChartDataLabels] // 啟用插件
+        }
       });
     }
 
@@ -109,6 +95,7 @@
   </script>
 </body>
 </html>
+
 
 
 
