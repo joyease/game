@@ -2,12 +2,129 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>體重變化曲線圖（最近15筆）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>健康資料趨勢圖</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      margin: 0; padding: 10px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #333;
+      font-size: 2rem;
+    }
+    .chart-container {
+      background: #fff;
+      padding: 10px 15px;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+      border-radius: 8px;
+      margin-bottom: 20px;
+      width: 100%;
+      max-width: 400px;    /* 手機適配較窄的寬度 */
+      max-height: 280px;   /* 高度縮小 */
+      margin-left: auto;
+      margin-right: auto;
+      overflow: auto;
+    }
+    canvas {
+      max-width: 100%;
+      height: 240px !important; /* 高度縮小 */
+    }
+    header {
+      background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC67bI3IRlHhGO8BfnZ5VBrdt9u24ZNTGRLrKXriMoTC9fo6T4fpRBDvxBxYd7zVNBn8JB4vMxQuJMMZqS9JIsifbURTsXbRgXjxbabhEkqTyzAx_IFcZ2375lc8RKTTYtXPDGlfI9Up9bpD29YwltcI8jkLbsBi3KR6LrSG04qRH153WABWLjLDBp2_CRnT3wZzt_O9QEi1PGlAfJOZnMA4FxW29BWn5OvOOnD82whAqXvCNT-pv8Ke29a2s2GuLACf-RdxYt36p78');
+      background-size: cover;
+      background-position: center;
+      color: white;
+      padding: 40px 15px;
+      text-align: center;
+    }
+    header h1 {
+      font-size: 2.25rem;
+      font-weight: bold;
+      text-yellow: 1px 1px 8px rgba(0,0,0,0.7);
+    }
+    footer {
+      background: #e2e8f0;
+      padding: 14px 10px;
+      text-align: center;
+    }
+    footer .flex-container {
+      display: flex;
+      justify-content: center;
+      gap: 25px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    footer a {
+      text-decoration: none;
+      color: #4a5568;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.8rem;
+      transition: color 0.3s ease;
+    }
+    footer a:hover {
+      color: #2563eb;
+    }
+    footer svg {
+      height: 28px;
+      width: 28px;
+      margin-bottom: 2px;
+      stroke-width: 2;
+    }
+  </style>
 </head>
 <body>
-  <h2>體重變化曲線圖（最近15筆）</h2>
-  <canvas id="weightChart" width="800" height="400"></canvas>
+  <header>
+    <h1>AI健康趨勢</h1>
+  </header>
+
+  <div class="chart-container">
+    <h3>健康趨勢變化</h3>
+    <p>透過觀察過去15天的變化曲線, 掌握自己的健康趨勢</p>
+  </div>
+
+  <div class="chart-container">
+    <h2>體重變化曲線 (最近15筆)</h2>
+    <canvas id="weightChart"></canvas>
+  </div>
+
+  <div class="chart-container">
+    <h2>步數變化曲線 (最近15筆)</h2>
+    <canvas id="stepsChart"></canvas>
+  </div>
+
+  <div class="chart-container">
+    <h2>卡路里變化曲線 (最近15筆)</h2>
+    <canvas id="caloriesChart"></canvas>
+  </div>
+
+  <footer>
+    <div class="flex-container">
+      <a href="record.html" title="記錄頁">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M5 13l4 4L19 7" /></svg>
+        <span>記錄頁</span>
+      </a>
+      <a href="trend.html" title="趨勢頁">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M3 17l6-6 4 4 8-8" /></svg>
+        <span>趨勢頁</span>
+      </a>
+      <a href="ai.html" title="AI咨詢頁">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path d="M12 20h9"/>
+          <path d="M12 4h9"/>
+          <path d="M4 9h16"/>
+          <path d="M4 15h16"/>
+        </svg>
+        <span>AI咨詢頁</span>
+      </a>
+    </div>
+  </footer>
 
   <script>
     async function fetchData() {
@@ -16,64 +133,78 @@
       return data;
     }
 
-    async function createChart() {
-      let data = await fetchData();
-
-      // 取最後15筆
-      if (data.length > 15) {
-        data = data.slice(data.length - 15);
-      }
-
-      const labels = Array.from({ length: data.length }, (_, i) => i + 1);
-      const weights = data.map(item => item.weight);
-
-      const ctx = document.getElementById('weightChart').getContext('2d');
-      new Chart(ctx, {
+    function createLineChart(ctx, label, labels, data, color) {
+      return new Chart(ctx, {
         type: 'line',
         data: {
           labels: labels,
           datasets: [{
-            label: '體重 (kg)',
-            data: weights,
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            fill: true,
-            tension: 0.2,
-            pointRadius: 5,
-            pointHoverRadius: 7
+            label: label,
+            data: data,
+            borderColor: color,
+            fill: false,
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 6
           }]
         },
         options: {
           scales: {
             x: {
-              title: {
-                display: true,
-                text: '筆數'
-              }
+              title: { display: true, text: '筆數' },
+              ticks: { color: '#555', font: { size: 10 } }
             },
             y: {
               beginAtZero: false,
-              title: {
-                display: true,
-                text: '體重(kg)'
-              }
+              title: { display: true, text: label },
+              ticks: { color: '#555', font: { size: 10 } }
             }
           },
           plugins: {
+            legend: {
+              labels: { font: { size: 12 }, color: '#333' }
+            },
             tooltip: {
-              enabled: false  // 關閉 tooltip 功能
+              enabled: true
             }
           },
           interaction: {
             mode: 'nearest',
             intersect: true
-          }
+          },
+          responsive: true,
+          maintainAspectRatio: false
         }
       });
     }
 
-    createChart();
+    async function main() {
+      let data = await fetchData();
+      if (data.length > 15) {
+        data = data.slice(data.length - 15);
+      }
+      const labels = Array.from({ length: data.length }, (_, i) => i + 1);
+      const weights = data.map(d => d.weight);
+      const steps = data.map(d => d.steps);
+      const calories = data.map(d => d.calories);
+
+      const weightCtx = document.getElementById('weightChart').getContext('2d');
+      const stepsCtx = document.getElementById('stepsChart').getContext('2d');
+      const caloriesCtx = document.getElementById('caloriesChart').getContext('2d');
+
+      createLineChart(weightCtx, '體重 (kg)', labels, weights, 'rgba(75,192,192,1)');
+      createLineChart(stepsCtx, '步數', labels, steps, 'rgba(255, 159, 64,1)');
+      createLineChart(caloriesCtx, '卡路里 (Kcal)', labels, calories, 'rgba(255, 99, 132,1)');
+    }
+
+    main();
   </script>
 </body>
 </html>
+
+
+
+
+
+
 
