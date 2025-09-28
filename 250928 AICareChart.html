@@ -22,17 +22,22 @@
 
     async function createChart() {
       const data = await fetchData();
-      const dates = data.map(item => new Date(item.date));
-      const weights = data.map(item => item.weight);
+
+      const chartData = data.map(item => {
+        const date = new Date(item.date);
+        if (isNaN(date)) {
+          console.warn('日期格式有問題:', item.date);
+        }
+        return { x: date, y: item.weight };
+      });
 
       const ctx = document.getElementById('weightChart').getContext('2d');
       new Chart(ctx, {
         type: 'line',
         data: {
-          labels: dates,
           datasets: [{
             label: '體重 (kg)',
-            data: weights,
+            data: chartData,
             borderColor: 'rgba(75, 192, 192, 1)',
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             fill: true,
