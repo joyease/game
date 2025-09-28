@@ -19,19 +19,69 @@
     async function createChart() {
       let data = await fetchData();
 
-      // 取最後10筆資料
       if (data.length > 10) {
         data = data.slice(data.length - 10);
       }
 
       const labels = Array.from({length: data.length}, (_, i) => i + 1);
-
-      // 這邊把資料點改成對應權重，並且附帶完整資料作顯示
       const datasetData = data.map(item => ({
         y: item.weight,
-        date: item.date  // 附加日期供 tooltip 顯示
+        date: item.date
       }));
 
       const ctx = document.getElementById('weightChart').getContext('2d');
-      new Chart(ctx
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '體重 (kg)',
+            data: datasetData,
+            borderColor: 'rgba(75,192,192,1)',
+            backgroundColor: 'rgba(75,192,192,0.2)',
+            fill: true,
+            tension: 0.2,
+            pointRadius: 5,
+            pointHoverRadius: 7
+          }]
+        },
+        options: {
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: '筆數'
+              }
+            },
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: '體重(kg)'
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const dataPoint = context.dataset.data[context.dataIndex];
+                  return `日期: ${dataPoint.date}\n體重: ${dataPoint.y} kg`;
+                }
+              }
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            intersect: true
+          }
+        }
+      });
+    }
+
+    createChart();
+  </script>
+</body>
+</html>
+
 
