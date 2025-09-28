@@ -24,16 +24,8 @@
         data = data.slice(data.length - 15);
       }
 
-      const labels = Array.from({length: data.length}, (_, i) => i + 1);
-
-      // 改成物件陣列，包含更多欄位給tooltip用
-      const datasetData = data.map(item => ({
-        y: item.weight,
-        sleep: item.sleep,
-        steps: item.steps,
-        calories: item.calories,
-        water: item.water
-      }));
+      const labels = Array.from({ length: data.length }, (_, i) => i + 1);
+      const weights = data.map(item => item.weight);
 
       const ctx = document.getElementById('weightChart').getContext('2d');
       new Chart(ctx, {
@@ -42,7 +34,7 @@
           labels: labels,
           datasets: [{
             label: '體重 (kg)',
-            data: datasetData,
+            data: weights,
             borderColor: 'rgba(75, 192, 192, 1)',
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             fill: true,
@@ -69,18 +61,7 @@
           },
           plugins: {
             tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const d = context.dataset.data[context.dataIndex];
-                  return [
-                    `體重: ${d.y} kg`,
-                    `睡眠: ${d.sleep} 小時`,
-                    `步數: ${d.steps}`,
-                    `卡路里: ${d.calories} Kcal`,
-                    `飲水: ${d.water} 杯`
-                  ];
-                }
-              }
+              enabled: false  // 關閉 tooltip 功能
             }
           },
           interaction: {
@@ -95,7 +76,4 @@
   </script>
 </body>
 </html>
-
-
-
 
