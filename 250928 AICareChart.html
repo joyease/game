@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <title>體重變化曲線圖（最近15筆）</title>
+  <title>體重變化曲線圖（最近15筆，點擊顯示完整資料）</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -19,15 +19,19 @@
     async function createChart() {
       let data = await fetchData();
 
+      // 取最新15筆資料
       if (data.length > 15) {
         data = data.slice(data.length - 15);
       }
 
+      // X軸標籤 1~15
       const labels = Array.from({length: data.length}, (_, i) => i + 1);
 
+      // 用物件形式，組成資料集時傳入額外欄位作為tooltip顯示內容用
       const chartData = data.map(item => ({
+        x: null, // 用labels做X軸，不需單獨設定x
         y: item.weight,
-        fullData: item
+        fullData: item    // 把完整item資料綁定在該點上
       }));
 
       const ctx = document.getElementById('weightChart').getContext('2d');
@@ -56,6 +60,7 @@
             tooltip: {
               callbacks: {
                 label: function(context) {
+                  // 取出綁定的完整資料
                   const item = context.dataset.data[context.dataIndex].fullData;
                   return [
                     `日期: ${item.date}`,
@@ -92,4 +97,5 @@
   </script>
 </body>
 </html>
+
 
