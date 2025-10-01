@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>溪頭賞鳥步道-天文台-登山步道點點地圖</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0; 
+      padding: 0;
+    }
+    #map {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h3>2510八里淡水自行車點位地圖展示</h3>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const jsonUrl = 'https://raw.githubusercontent.com/joyease/game/main/2510Damsui.json';
+    const map = L.map('map').setView([25.10, 121.49], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    fetch(jsonUrl)
+      .then(response => response.json())
+      .then(data => {
+        const latlngs = [];
+        let index = 0;
+
+        // 自動調整地圖視野範圍以包含所有點
+        map.fitBounds(L.latLngBounds(data.map(p => [p.latitude, p.longitude])));
+
+        function addNextPoint() {
+          if (index >= data.length) return;
+          const point = data[index];
+          const latLng = [point.latitude, point.longitude];
+          latlngs.push(latLng);
+
+          // 加入圓圈標記點
+          const circleMarker = L.circleMarker(latLng, {
+            radius: 3,
+            fillColor: 'yellow',
+            color: 'blue',
+            weight: 2,
+            fillOpacity: 0.6
+          }).addTo(map);
+
+          // 綁定標記彈跳視窗內容
+          circleMarker.bindPopup(
+            `<b>標籤:</b> ${point.label}<br>` +
+            `<b>海拔:</b> ${point.elevation} m<br>` +
+            `經度: ${point.longitude}<br>` +
+            `緯度: ${point.latitude}`
+          );
+
+          // 畫出點與點間連線
+          if (latlngs.length > 1) {
+            L.polyline(
+              [latlngs[latlngs.length - 2], latlngs[latlngs.length - 1]], 
+              {
+                color: 'blue',
+                weight: 2,
+                dashArray: '5, 5'
+              }
+            ).addTo(map);
+          }
+
+          index++;
+          setTimeout(addNextPoint, 200);  // 延遲 200 ms 逐點加入
+        }
+
+        addNextPoint();
+      })
+      .catch(err => {
+        console.error('載入JSON出錯:', err);
+      });
+  </script>
+</body>
+</html>
