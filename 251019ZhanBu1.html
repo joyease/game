@@ -29,57 +29,37 @@
       color: #555;
     }
   </style>
-  <script>
-    // 🚀 改成你的 GAS 部署 URL
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxVTiuhOUh0QF0BvoiMPms8pd8vtHlCf3evOJmcaJGj1CfoNehHhWndmxxwEQJN1eygcw/exec";
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzAJ2DpZPTuUvwxyCQHn18BW5CY5JBNGU2dvm8QGfq80eGWm3vPP3W_tCUXRQDdMHydlg/exec"; // 改成你自己的 Web App URL
 
-    function updateTime() {
-      const now = new Date();
-      const options = {
-        timeZone: "Asia/Taipei",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      };
-      document.getElementById("time").innerText =
-        new Intl.DateTimeFormat("zh-TW", options).format(now);
+function submitNumbers() {
+  const topic = document.getElementById("topic").value.trim();
+  const guaNum = parseInt(document.getElementById("guaNum").value);
+  const yaoNum = parseInt(document.getElementById("yaoNum").value);
+
+  if (!topic) return alert("請輸入主題。");
+  if (isNaN(guaNum) || guaNum < 100 || guaNum > 999) return alert("取卦數字需為 100~999");
+  if (isNaN(yaoNum) || yaoNum < 100 || yaoNum > 999) return alert("取爻數字需為 100~999");
+
+  const payload = { topic, guaNum, yaoNum };
+
+  fetch(GAS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert(`${data.message}\n卦名：${data.guaName}\n爻名：${data.yaoName}`);
+    } else {
+      alert("寫入失敗：" + data.message);
     }
+  })
+  .catch(err => alert("連線錯誤：" + err.message));
+}
+</script>
 
-    async function submitNumbers() {
-      const topic = document.getElementById("topic").value.trim();
-      const guaNum = parseInt(document.getElementById("guaNum").value);
-      const yaoNum = parseInt(document.getElementById("yaoNum").value);
-
-      if (!topic) return alert("請輸入主題。");
-      if (isNaN(guaNum) || isNaN(yaoNum) ||
-          guaNum < 100 || guaNum > 999 || yaoNum < 100 || yaoNum > 999) {
-        return alert("請輸入 100～999 之間的整數。");
-      }
-
-      const payload = { topic, guaNum, yaoNum };
-
-      try {
-        const res = await fetch(GAS_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        const result = await res.json();
-
-        if (result.success) {
-          alert(`記錄成功！\n主題：${topic}\n時間：${result.dateTime}\n卦：${result.guaName}\n爻：${result.yaoName}`);
-        } else {
-          alert("寫入失敗：" + result.error);
-        }
-      } catch (err) {
-        alert("發生錯誤：" + err.message);
-      }
-    }
-
-    window.onload = updateTime;
-  </script>
 </head>
 <body>
   <h1>易經占卜</h1>
@@ -98,4 +78,3 @@
   <p style="margin-top:40px;">記錄後可前往 <a href="view.html" target="_blank">查看卦辭與爻辭</a></p>
 </body>
 </html>
-
