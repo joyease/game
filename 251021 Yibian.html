@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>易經變卦十進位計算器</title>
+<style>
+body { font-family: "Noto Sans TC", sans-serif; margin: 40px; }
+label { display: block; margin: 10px 0 5px; }
+input { padding: 5px; width: 200px; }
+button { margin-top: 10px; padding: 6px 12px; }
+.result { margin-top: 15px; font-weight: bold; color: #004d40; }
+</style>
+</head>
+<body>
+  <h2>🌿 易經變卦十進位計算器</h2>
+
+  <label>本卦（十進位，0–63）</label>
+  <input id="decimal" type="number" min="0" max="63" placeholder="例如：19">
+
+  <label>變爻（1~6，1=初爻，6=上爻）</label>
+  <input id="line" type="number" min="1" max="6" placeholder="例如：2">
+
+  <button onclick="calcChange()">計算變卦</button>
+
+  <div id="result" class="result"></div>
+
+<script>
+function calcChange() {
+  const dec = parseInt(document.getElementById("decimal").value);
+  const line = parseInt(document.getElementById("line").value);
+  const resultDiv = document.getElementById("result");
+
+  if (isNaN(dec) || dec < 0 || dec > 63) {
+    resultDiv.textContent = "⚠️ 請輸入介於 0 至 63 的整數。";
+    return;
+  }
+  if (isNaN(line) || line < 1 || line > 6) {
+    resultDiv.textContent = "⚠️ 變爻必須是 1 到 6 之間的數字。";
+    return;
+  }
+
+  // 轉換為6位二進制（上爻在左）
+  let bin = dec.toString(2).padStart(6, "0");
+  
+  // 翻轉對應爻（注意上爻在左，所以 index = 6 - line）
+  const arr = bin.split("");
+  const index = 6 - line;
+  arr[index] = arr[index] === "0" ? "1" : "0";
+  const changedBin = arr.join("");
+
+  // 轉回十進位
+  const changedDec = parseInt(changedBin, 2);
+
+  resultDiv.innerHTML = `
+    本卦二進位：${bin}<br>
+    變卦二進位：${changedBin}<br>
+    ➤ 變卦十進位：${changedDec}
+  `;
+}
+</script>
+</body>
+</html>
