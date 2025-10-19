@@ -30,7 +30,8 @@
     }
   </style>
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxXMXGep9OlhtJ4npecgks5q9y5VRDvJd7zPQmzybucYJjF6iCXBgLQR77HN4KQ4ECZrA/exec"; // ← 改成你部署後的 Apps Script 網址
+    // 🚀 改成你的 GAS 部署 URL
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxVTiuhOUh0QF0BvoiMPms8pd8vtHlCf3evOJmcaJGj1CfoNehHhWndmxxwEQJN1eygcw/exec";
 
     function updateTime() {
       const now = new Date();
@@ -57,9 +58,7 @@
         return alert("請輸入 100～999 之間的整數。");
       }
 
-      const now = new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
-
-      const payload = { dateTime: now, topic, guaNum, yaoNum };
+      const payload = { topic, guaNum, yaoNum };
 
       try {
         const res = await fetch(GAS_URL, {
@@ -67,10 +66,10 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-
         const result = await res.json();
+
         if (result.success) {
-          alert(`主題「${topic}」記錄成功！\n卦：${result.guaName}\n爻：${result.yaoName}`);
+          alert(`記錄成功！\n主題：${topic}\n時間：${result.dateTime}\n卦：${result.guaName}\n爻：${result.yaoName}`);
         } else {
           alert("寫入失敗：" + result.error);
         }
