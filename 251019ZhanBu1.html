@@ -50,7 +50,7 @@
   </style>
 
   <script>
-    // ⚙️ 請改成你自己的 Apps Script 部署網址
+    // ⚙️ 請改成你自己的 Apps Script 部署網址 (使用您提供的最新 URL)
     const GAS_URL = "https://script.google.com/macros/s/AKfycbySlZsSsBTcGGnitwHARCJipTMhJrjuZNg0RVhRvxflr29bRwcJSoZ8fyAKcJwJDcww/exec";
 
     function updateTime() {
@@ -82,14 +82,28 @@
         // Step 1️⃣ 寫入 Google Sheet
         const writeRes = await fetch(GAS_URL, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          // ⬇️ 關鍵修正：將 Content-Type 設為 text/plain，繞過 CORS 預檢 (405 錯誤)
+          headers: { "Content-Type": "text/plain" },
           body: JSON.stringify(payload)
         });
+        
+        // 檢查響應狀態碼，如果不是 200 OK，則拋出錯誤
+        if (!writeRes.ok) {
+            const errorText = await writeRes.text();
+            throw new Error(`POST 請求失敗，狀態碼：${writeRes.status}。請檢查 GAS 部署權限。`);
+        }
+
         const writeData = await writeRes.json();
         if (!writeData.success) throw new Error(writeData.message);
 
         // Step 2️⃣ 取得最後一筆資料 (含卦辭爻辭)
         const readRes = await fetch(`${GAS_URL}?mode=lastRecord`);
+        
+        // 檢查響應狀態碼
+        if (!readRes.ok) {
+             throw new Error(`GET 請求失敗，狀態碼：${readRes.status}`);
+        }
+
         const readData = await readRes.json();
         if (!readData.success) throw new Error(readData.message);
 
@@ -129,10 +143,3 @@
   <div id="result"></div>
 </body>
 </html>
-
-
-
-
-
-
-
