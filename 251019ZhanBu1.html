@@ -30,6 +30,8 @@
     }
   </style>
   <script>
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxXMXGep9OlhtJ4npecgks5q9y5VRDvJd7zPQmzybucYJjF6iCXBgLQR77HN4KQ4ECZrA/exec"; // ← 改成你部署後的 Apps Script 網址
+
     function updateTime() {
       const now = new Date();
       const options = {
@@ -44,25 +46,37 @@
         new Intl.DateTimeFormat("zh-TW", options).format(now);
     }
 
-    function submitNumbers() {
+    async function submitNumbers() {
       const topic = document.getElementById("topic").value.trim();
-      const guaNum = document.getElementById("guaNum").value;
-      const yaoNum = document.getElementById("yaoNum").value;
+      const guaNum = parseInt(document.getElementById("guaNum").value);
+      const yaoNum = parseInt(document.getElementById("yaoNum").value);
 
-      if (!topic) {
-        alert("請輸入主題。");
-        return;
-      }
-      if (!guaNum || !yaoNum || guaNum < 100 || guaNum > 999 || yaoNum < 100 || yaoNum > 999) {
-        alert("請輸入 100～999 之間的整數。");
-        return;
+      if (!topic) return alert("請輸入主題。");
+      if (isNaN(guaNum) || isNaN(yaoNum) ||
+          guaNum < 100 || guaNum > 999 || yaoNum < 100 || yaoNum > 999) {
+        return alert("請輸入 100～999 之間的整數。");
       }
 
       const now = new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
 
-      google.script.run.withSuccessHandler((res) => {
-        alert(`主題「${topic}」記錄成功！\n卦：${res.guaName}\n第 ${res.yaoIndex} 爻。`);
-      }).recordDivination(now, topic, guaNum, yaoNum);
+      const payload = { dateTime: now, topic, guaNum, yaoNum };
+
+      try {
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          alert(`主題「${topic}」記錄成功！\n卦：${result.guaName}\n爻：${result.yaoName}`);
+        } else {
+          alert("寫入失敗：" + result.error);
+        }
+      } catch (err) {
+        alert("發生錯誤：" + err.message);
+      }
     }
 
     window.onload = updateTime;
@@ -85,3 +99,4 @@
   <p style="margin-top:40px;">記錄後可前往 <a href="view.html" target="_blank">查看卦辭與爻辭</a></p>
 </body>
 </html>
+
