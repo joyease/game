@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>易經占卜 - 取卦</title>
+  <style>
+    body {
+      font-family: "Noto Serif TC", serif;
+      background-color: #faf8f2;
+      text-align: center;
+      padding-top: 60px;
+      color: #333;
+    }
+    input {
+      font-size: 18px;
+      width: 200px;
+      margin: 10px;
+      padding: 6px;
+    }
+    button {
+      font-size: 18px;
+      padding: 8px 16px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    #time {
+      margin-bottom: 30px;
+      font-size: 20px;
+      color: #555;
+    }
+  </style>
+  <script>
+    function updateTime() {
+      const now = new Date();
+      const options = {
+        timeZone: "Asia/Taipei",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      };
+      document.getElementById("time").innerText =
+        new Intl.DateTimeFormat("zh-TW", options).format(now);
+    }
+
+    function submitNumbers() {
+      const topic = document.getElementById("topic").value.trim();
+      const guaNum = document.getElementById("guaNum").value;
+      const yaoNum = document.getElementById("yaoNum").value;
+
+      if (!topic) {
+        alert("請輸入主題。");
+        return;
+      }
+      if (!guaNum || !yaoNum || guaNum < 100 || guaNum > 999 || yaoNum < 100 || yaoNum > 999) {
+        alert("請輸入 100～999 之間的整數。");
+        return;
+      }
+
+      const now = new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
+
+      google.script.run.withSuccessHandler((res) => {
+        alert(`主題「${topic}」記錄成功！\n卦：${res.guaName}\n第 ${res.yaoIndex} 爻。`);
+      }).recordDivination(now, topic, guaNum, yaoNum);
+    }
+
+    window.onload = updateTime;
+  </script>
+</head>
+<body>
+  <h1>易經占卜</h1>
+  <div id="time"></div>
+
+  <label>主題：</label>
+  <input type="text" id="topic" placeholder="請輸入占卜主題"><br>
+
+  <label>取卦數字：</label>
+  <input type="number" id="guaNum" min="100" max="999"><br>
+
+  <label>取爻數字：</label>
+  <input type="number" id="yaoNum" min="100" max="999"><br>
+
+  <button onclick="submitNumbers()">記錄</button>
+  <p style="margin-top:40px;">記錄後可前往 <a href="view.html" target="_blank">查看卦辭與爻辭</a></p>
+</body>
+</html>
