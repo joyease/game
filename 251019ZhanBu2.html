@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>易經占卜</title>
+  <style>
+    body {
+      font-family: "Noto Serif TC", serif;
+      background-color: #faf8f2;
+      color: #333;
+      text-align: center;
+      padding: 40px;
+      line-height: 1.8;
+    }
+    h1 {
+      color: #7b4b27;
+    }
+    input {
+      font-size: 18px;
+      width: 200px;
+      margin: 6px;
+      padding: 6px;
+      text-align: center;
+    }
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin: 12px;
+      cursor: pointer;
+    }
+    #time {
+      margin-bottom: 20px;
+      color: #555;
+    }
+    .result {
+      margin-top: 30px;
+      background: #fff8ee;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 6px #d9cbb2;
+      text-align: left;
+      display: inline-block;
+      width: 80%;
+      max-width: 600px;
+    }
+    .label {
+      color: #7b4b27;
+      font-weight: bold;
+    }
+  </style>
+
+  <script>
+    // ⚙️ 請改成你自己的 Apps Script 部署網址
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbySlZsSsBTcGGnitwHARCJipTMhJrjuZNg0RVhRvxflr29bRwcJSoZ8fyAKcJwJDcww/exec";
+
+    function updateTime() {
+      const now = new Date();
+      const options = {
+        timeZone: "Asia/Taipei",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      };
+      document.getElementById("time").innerText =
+        new Intl.DateTimeFormat("zh-TW", options).format(now);
+    }
+
+    async function recordAndView() {
+      const topic = document.getElementById("topic").value.trim();
+      const guaNum = parseInt(document.getElementById("guaNum").value);
+      const yaoNum = parseInt(document.getElementById("yaoNum").value);
+
+      if (!topic) return alert("請輸入主題。");
+      if (isNaN(guaNum) || guaNum < 100 || guaNum > 999) return alert("取卦數字需為 100～999");
+      if (isNaN(yaoNum) || yaoNum < 100 || yaoNum > 999) return alert("取爻數字需為 100～999");
+
+      const payload = { topic, guaNum, yaoNum };
+
+      try {
+        // Step 1️⃣ 寫入 Google Sheet
+        const writeRes = await fetch(GAS_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" }, // 修正：繞過 405 CORS 預檢
+          body: JSON.stringify(payload)
+        });
+        
+        if (!writeRes.ok) {
+            throw new Error(`POST 請求失敗，狀態碼：${writeRes.status}。請檢查 GAS 部署權限。`);
+        }
+
+        const writeData = await writeRes.json();
+        if (!writeData.success) throw new Error(writeData.message);
+
+        // Step 2️⃣ 取得最後一筆資料 (含卦辭爻辭)
+        const readRes = await fetch(`${GAS_URL}?mode=lastRecord`);
+        
+        if (!readRes.ok) {
+             throw new Error(`GET 請求失敗，狀態碼：${readRes.status}`);
+        }
+
+        const readData = await readRes.json();
+        if (!readData.success) throw new Error(readData.message);
+
+        // Step 3️⃣ 顯示結果
+        document.getElementById("result").innerHTML = `
+          <div class="result">
+            <p><span class="label">日期時間：</span>${readData.dateTime}</p>
+            <p><span class="label">主題：</span>${readData.topic}</p>
+            
+            <p>
+              <span class="label">卦名：</span>${readData.guaName}
+              <span style="color:#7b4b27; font-weight: bold;">(卦序：${readData.guaIndex} | 爻序：${readData.yaoIndex})</span>
+            </p>
+            
+            <p><span class="label">卦辭：</span>${readData.guaDesc}</p>
+            <p><span class="label">爻名：</span>${readData.yaoName}</p>
+            <p><span class="label">爻辭：</span>${readData.yaoText}</p>
+          </div>
+        `;
+      } catch (err) {
+        alert("發生錯誤：" + err.message);
+      }
+    }
+
+    window.onload = updateTime;
+  </script>
+</head>
+
+<body>
+  <h1>易經占卜</h1>
+  <div id="time"></div>
+
+  <label>主題：</label>
+  <input type="text" id="topic" placeholder="請輸入占卜主題"><br>
+  <label>取卦數字：</label>
+  <input type="number" id="guaNum" min="100" max="999"><br>
+  <label>取爻數字：</label>
+  <input type="number" id="yaoNum" min="100" max="999"><br>
+
+  <button onclick="recordAndView()">開始占卜</button>
+
+  <div id="result"></div>
+</body>
+</html>
