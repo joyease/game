@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>易經占卜 — 三位數亂數產生器</title>
+<style>
+  :root{
+    --bg:#f7f6f2;
+    --card:#ffffff;
+    --accent:#2e7d32;
+    --muted:#666;
+  }
+  body{
+    margin:0;
+    font-family: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg, #fbfbfa 0%, #f0efe9 100%);
+    color:#222;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:24px;
+  }
+  .container{
+    width:100%;
+    max-width:720px;
+    background:var(--card);
+    border-radius:12px;
+    box-shadow:0 8px 30px rgba(30,30,30,0.08);
+    padding:28px;
+  }
+  h1{ margin:0 0 8px; font-size:1.6rem; color:var(--accent); }
+  p.lead{ margin:0 0 18px; color:var(--muted); line-height:1.6; }
+  .btn{
+    display:inline-block;
+    background:var(--accent);
+    color:white;
+    border:0;
+    padding:10px 16px;
+    border-radius:8px;
+    font-size:1rem;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(46,125,50,0.18);
+  }
+  .btn:active{ transform:translateY(1px); }
+  .display{
+    margin-top:18px;
+    display:flex;
+    gap:12px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  .num{
+    min-width:140px;
+    text-align:center;
+    padding:18px 12px;
+    border-radius:10px;
+    background:linear-gradient(180deg,#fff 0%, #f8f8f8 100%);
+    border:1px solid #eee;
+    font-weight:700;
+    font-size:1.6rem;
+    letter-spacing:4px;
+  }
+  .hint{ margin-top:12px; color:#888; font-size:0.95rem; }
+  .controls{ margin-top:16px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .small { font-size:0.9rem; color:#555; }
+  footer{ margin-top:18px; color:#999; font-size:0.85rem; }
+</style>
+</head>
+<body>
+  <main class="container" role="main" aria-labelledby="title">
+    <h1 id="title">易經占卜</h1>
+    <p class="lead">
+      請誠心的想著你想要請教的問題，希望易經給你兩個三位數的數字。只要按下「產生數字」按鈕，就會在畫面上產生兩個數字。
+    </p>
+
+    <div class="controls">
+      <button id="generateBtn" class="btn" aria-controls="results">產生數字</button>
+      <div class="small">每次按下會隨機產生兩個 100–999 的三位數。</div>
+    </div>
+
+    <div id="results" class="display" aria-live="polite" aria-atomic="true" style="margin-top:18px;">
+      <div id="numA" class="num" title="數字A">—</div>
+      <div id="numB" class="num" title="數字B">—</div>
+    </div>
+
+    <div class="hint">提示：如果你要把數字記下來，可直接複製或拍照存檔。</div>
+
+    <footer>易經占卜 · 亂數三位數生成器</footer>
+  </main>
+
+<script>
+/**
+ * 產生一個介於 100 到 999 的整數（包含）
+ */
+function randomThreeDigit() {
+  // Math.random() in [0,1)
+  // *900 -> [0,900)
+  // floor -> 0..899
+  // +100 -> 100..999
+  return Math.floor(Math.random() * 900) + 100;
+}
+
+document.getElementById('generateBtn').addEventListener('click', () => {
+  const a = randomThreeDigit();
+  const b = randomThreeDigit();
+
+  // 顯示在畫面上
+  document.getElementById('numA').textContent = a;
+  document.getElementById('numB').textContent = b;
+
+  // 小視覺反饋（短暫縮放）
+  const elA = document.getElementById('numA');
+  const elB = document.getElementById('numB');
+  elA.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' });
+  elB.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.06)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' });
+});
+</script>
+</body>
+</html>
