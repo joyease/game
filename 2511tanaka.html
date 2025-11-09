@@ -39,7 +39,7 @@
         let index = 0;
 
         // 🔹 定義顏色陣列，每20個點換色
-        const colors = ['red', 'blue', 'green', 'darkblack', 'orange', 'red', 'blue', 'green', 'darkblack', 'orange'];
+        const colors = ['red', 'blue', 'green', 'orange', 'darkblack', 'red', 'blue', 'green', 'orange', 'darkblack'];
 
         // 自動調整地圖視野範圍以包含所有點
         map.fitBounds(L.latLngBounds(data.map(p => [p.latitude, p.longitude])));
