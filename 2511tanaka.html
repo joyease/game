@@ -1,128 +1,98 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <title>251109田中馬拉松</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0; 
-      padding: 0;
-    }
-    #map {
-      width: 100vw;
-      height: 100vh;
-      max-width: 100%;
-      max-height: 100%;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <title>251109田中馬拉松</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0; 
+      padding: 0;
+    }
+    #map {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
 </head>
 <body>
-  <h3>251109田中馬拉松</h3>
-  <div id="map"></div>
+  <h3>251109田中馬拉松</h3>
+  <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script>
-    const jsonUrl = 'https://raw.githubusercontent.com/joyease/game/main/2511tanaka.json';
-    // 將 setView 改為 [0, 0] 和 2，因為後面會用 fitBounds 自動調整，避免一開始載入時畫面不正確
-    const map = L.map('map').setView([0, 0], 2); 
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const jsonUrl = 'https://raw.githubusercontent.com/joyease/game/main/2511tanaka.json';
+    const map = L.map('map').setView([25.10, 121.49], 12);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
 
-    // 🎨 定義一系列顏色，用於循環
-    const colors = [
-        '#FF5733', // 鮮豔橘紅
-        '#33FF57', // 鮮豔綠色
-        '#3357FF', // 鮮豔藍色
-        '#FF33A1', // 鮮豔桃紅
-        '#33FFF6', // 鮮豔青色
-        '#FFBD33'  // 鮮豔橘黃
-        // 您可以根據需要添加更多顏色
-    ];
-    // 🎨 定義每組的點數
-    const pointsPerGroup = 40; 
-    // 🎨 決定連線(polyline)的顏色是否也跟著變動
-    const changePolylineColor = false; // 設為 true 則連線顏色也會變動
+    fetch(jsonUrl)
+      .then(response => response.json())
+      .then(data => {
+        const latlngs = [];
+        let index = 0;
 
-    fetch(jsonUrl)
-      .then(response => response.json())
-      .then(data => {
-        const latlngs = [];
-        let index = 0;
+        // 🔹 定義顏色陣列，每40個點換色
+        const colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'cyan', 'magenta'];
 
-        // 自動調整地圖視野範圍以包含所有點
-        if (data.length > 0) {
-            map.fitBounds(L.latLngBounds(data.map(p => [p.latitude, p.longitude])));
+        // 自動調整地圖視野範圍以包含所有點
+        map.fitBounds(L.latLngBounds(data.map(p => [p.latitude, p.longitude])));
+
+        function addNextPoint() {
+          if (index >= data.length) return;
+          const point = data[index];
+          const latLng = [point.latitude, point.longitude];
+          latlngs.push(latLng);
+
+          // 🔹 根據 index 決定目前顏色（每40點換一組顏色）
+          const colorIndex = Math.floor(index / 40) % colors.length;
+          const markerColor = colors[colorIndex];
+
+          // 加入圓圈標記點
+          const circleMarker = L.circleMarker(latLng, {
+            radius: 3,
+            fillColor: markerColor,
+            color: 'black',
+            weight: 1,
+            fillOpacity: 0.7
+          }).addTo(map);
+
+          // 綁定標記彈跳視窗內容
+          circleMarker.bindPopup(
+            `<b>標籤:</b> ${point.label}<br>` +
+            `<b>海拔:</b> ${point.elevation} m<br>` +
+            `經度: ${point.longitude}<br>` +
+            `緯度: ${point.latitude}`
+          );
+
+          // 畫出點與點間連線（使用同樣顏色）
+          if (latlngs.length > 1) {
+            L.polyline(
+              [latlngs[latlngs.length - 2], latlngs[latlngs.length - 1]], 
+              {
+                color: markerColor,
+                weight: 2,
+                dashArray: '5, 5'
+              }
+            ).addTo(map);
+          }
+
+          index++;
+          setTimeout(addNextPoint, 100); // 每100ms加一個點
         }
 
-        function addNextPoint() {
-          if (index >= data.length) return;
-          const point = data[index];
-          const latLng = [point.latitude, point.longitude];
-          latlngs.push(latLng);
-
-            // 🎨 根據 index 計算應該使用的顏色
-            const colorIndex = Math.floor(index / pointsPerGroup) % colors.length;
-            const currentColor = colors[colorIndex];
-            const nextColor = colors[(colorIndex + 1) % colors.length]; // 下一個區間的顏色
-
-          // 加入圓圈標記點
-          const circleMarker = L.circleMarker(latLng, {
-            radius: 2,
-            fillColor: currentColor, // 🎨 使用計算出的顏色
-            color: currentColor,     // 🎨 外框也使用計算出的顏色
-            weight: 1,
-            fillOpacity: 0.6
-          }).addTo(map);
-
-          // 綁定標記彈跳視窗內容
-          circleMarker.bindPopup(
-            `<b>點編號:</b> ${index}<br>` + // 加上點編號方便確認分組
-            `<b>標籤:</b> ${point.label}<br>` +
-            `<b>海拔:</b> ${point.elevation} m<br>` +
-            `經度: ${point.longitude}<br>` +
-            `緯度: ${point.latitude}`
-          );
-
-          // 畫出點與點間連線
-          if (latlngs.length > 1) {
-                // 🎨 決定連線顏色，可選擇使用當前顏色或下一個區間的顏色，或固定顏色
-                let polylineColor = 'blue'; // 預設連線顏色
-                if (changePolylineColor) {
-                    // 使用上一個點的顏色作為連線顏色
-                    const prevColorIndex = Math.floor((index - 1) / pointsPerGroup) % colors.length;
-                    polylineColor = colors[prevColorIndex]; 
-                }
-                
-                // 🎨 處理跨越分組邊界的連線
-                if ((index % pointsPerGroup) === 0 && changePolylineColor) {
-                    // 如果是組的第一個點，連線可能要特殊處理 (例如用上一個區間的顏色)
-                    // 這裡的邏輯是讓連線使用前一個點（也就是前一個區間）的顏色
-                }
-
-            L.polyline(
-              [latlngs[latlngs.length - 2], latlngs[latlngs.length - 1]], 
-              {
-                color: polylineColor, // 🎨 使用決定好的連線顏色
-                weight: 2,
-                dashArray: '5, 5'
-              }
-            ).addTo(map);
-          }
-
-          index++;
-          setTimeout(addNextPoint, 100);  // 延遲 100 ms 逐點加入
-        }
-
-        addNextPoint();
-      })
-      .catch(err => {
-        console.error('載入JSON出錯:', err);
-      });
-  </script>
+        addNextPoint();
+      })
+      .catch(err => {
+        console.error('載入JSON出錯:', err);
+      });
+  </script>
 </body>
 </html>
+
