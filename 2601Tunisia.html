@@ -39,7 +39,7 @@
         let index = 0;
 
         // 🔹 定義顏色陣列，每20個點換色
-        const colors = ['red', 'blue', 'green', 'orange', 'darkblack', 'red', 'blue', 'green', 'orange', 'darkblack'];
+        const colors = ['red', 'blue', 'green', 'darkblack', 'red', 'blue', 'green', 'orange', 'darkblack'];
 
         // 自動調整地圖視野範圍以包含所有點
         map.fitBounds(L.latLngBounds(data.map(p => [p.latitude, p.longitude])));
@@ -50,7 +50,7 @@
           const latLng = [point.latitude, point.longitude];
           latlngs.push(latLng);
 
-          // 🔹 根據 index 決定目前顏色（每40點換一組顏色）
+          // 🔹 根據 index 決定目前顏色（每20點換一組顏色）
           const colorIndex = Math.floor(index / 20) % colors.length;
           const markerColor = colors[colorIndex];
 
