@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>2601突尼西亞</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0; 
+      padding: 0;
+    }
+    #map {
+      width: 100vw;
+      height: 100vh;
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h3>2601突尼西亞</h3>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const jsonUrl = 'https://raw.githubusercontent.com/joyease/game/main/2601tunisia.json';
+    const map = L.map('map').setView([36.03, 9.66], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    fetch(jsonUrl)
+      .then(response => response.json())
+      .then(data => {
+        const latlngs = [];
+        let index = 0;
+
+        // 🔹 定義顏色陣列，每20個點換色
+        const colors = ['red', 'blue', 'green', 'orange', 'darkblack', 'red', 'blue', 'green', 'orange', 'darkblack'];
+
+        // 自動調整地圖視野範圍以包含所有點
+        map.fitBounds(L.latLngBounds(data.map(p => [p.latitude, p.longitude])));
+
+        function addNextPoint() {
+          if (index >= data.length) return;
+          const point = data[index];
+          const latLng = [point.latitude, point.longitude];
+          latlngs.push(latLng);
+
+          // 🔹 根據 index 決定目前顏色（每40點換一組顏色）
+          const colorIndex = Math.floor(index / 20) % colors.length;
+          const markerColor = colors[colorIndex];
+
+          // 加入圓圈標記點
+          const circleMarker = L.circleMarker(latLng, {
+            radius: 2,
+            fillColor: markerColor,
+            color: 'black',
+            weight: 1,
+            fillOpacity: 0.7
+          }).addTo(map);
+
+          // 綁定標記彈跳視窗內容
+          circleMarker.bindPopup(
+            `<b>標籤:</b> ${point.label}<br>` +
+            `<b>海拔:</b> ${point.elevation} m<br>` +
+            `經度: ${point.longitude}<br>` +
+            `緯度: ${point.latitude}`
+          );
+
+          // 畫出點與點間連線（使用同樣顏色）
+          if (latlngs.length > 1) {
+            L.polyline(
+              [latlngs[latlngs.length - 2], latlngs[latlngs.length - 1]], 
+              {
+                color: markerColor,
+                weight: 2,
+                dashArray: '5, 5'
+              }
+            ).addTo(map);
+          }
+
+          index++;
+          setTimeout(addNextPoint, 100); // 每100ms加一個點
+        }
+
+        addNextPoint();
+      })
+      .catch(err => {
+        console.error('載入JSON出錯:', err);
+      });
+  </script>
+</body>
+</html>
