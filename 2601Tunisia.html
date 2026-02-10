@@ -58,7 +58,7 @@
           const circleMarker = L.circleMarker(latLng, {
             radius: 2,
             fillColor: markerColor,
-            color: 'black',
+            color: 'blue',
             weight: 1,
             fillOpacity: 0.7
           }).addTo(map);
@@ -77,8 +77,8 @@
               [latlngs[latlngs.length - 2], latlngs[latlngs.length - 1]], 
               {
                 color: markerColor,
-                weight: 2,
-                dashArray: '5, 5'
+                weight: 1,
+                dashArray: '3, 3'
               }
             ).addTo(map);
           }
