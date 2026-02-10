@@ -10,45 +10,12 @@
       height: 100%;
       margin: 0; 
       padding: 0;
-      font-family: "Microsoft JhengHei", Arial, sans-serif;
     }
     #map {
       width: 100vw;
       height: 100vh;
-    }
-    h3 {
-      position: absolute;
-      top: 10px;
-      left: 50px;
-      z-index: 1000;
-      margin: 0;
-      background: rgba(255, 255, 255, 0.7);
-      padding: 5px 10px;
-      border-radius: 5px;
-    }
-
-    /* --- 中文字體樣式：無框、無底色 --- */
-    .city-label {
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      color: #000;          /* 文字顏色 */
-      font-weight: bold;
-      font-size: 14px;
-      text-shadow: 
-        1px 1px 0 #fff, 
-       -1px -1px 0 #fff, 
-        1px -1px 0 #fff, 
-       -1px 1px 0 #fff;    /* 白色文字外描邊，確保在深色地圖上也看得見 */
-      white-space: nowrap;
-    }
-
-    /* 移除 Tooltip 的小箭頭 */
-    .leaflet-tooltip-top:before, 
-    .leaflet-tooltip-bottom:before, 
-    .leaflet-tooltip-left:before, 
-    .leaflet-tooltip-right:before {
-      display: none !important;
+      max-width: 100%;
+      max-height: 100%;
     }
   </style>
 </head>
@@ -59,29 +26,27 @@
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     const jsonUrl = 'https://raw.githubusercontent.com/joyease/game/main/2601tunisia.json';
-    
-    // 初始化地圖
-    const map = L.map('map').setView([34.0, 9.0], 7);
+    const map = L.map('map').setView([35.33, 9.66], 7);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // --- 🔹 定義主要地名標註 ---
+    // 🔹 標示特定地名：Mark 在上，純文字在下，無框無底色
     const cities = [
-      { name: "突尼斯 (Tunis)", pos: [36.8065, 10.1815] },
-      { name: "蘇斯 (Sousse)", pos: [35.8256, 10.6084] },
-      { name: "雪尼尼 (Chenini)", pos: [32.9114, 10.2618] },
-      { name: "吐澤 (Tozeur)", pos: [33.9197, 8.1335] },
-      { name: "米代斯 (Mides)", pos: [34.4056, 7.9194] },
-      { name: "杜茲 (Douz)", pos: [33.4611, 9.0203] },
-      { name: "杜加 (Dougga)", pos: [36.4227, 9.2201] }
+      { name: "突尼斯", pos: [36.8065, 10.1815] },
+      { name: "蘇斯", pos: [35.8256, 10.6084] },
+      { name: "雪尼尼", pos: [32.9114, 10.2618] },
+      { name: "吐澤", pos: [33.9197, 8.1335] },
+      { name: "米代斯", pos: [34.4056, 7.9194] },
+      { name: "杜茲", pos: [33.4611, 9.0203] },
+      { name: "杜加", pos: [36.4227, 9.2201] }
     ];
 
-    // 在地圖上畫出地名標記 (標記在文字上方)
     cities.forEach(city => {
+      // 畫出 Mark (藍色點)
       L.circleMarker(city.pos, {
-        radius: 4,
+        radius: 3,
         color: 'blue',
         fillColor: 'blue',
         fillOpacity: 1,
@@ -90,12 +55,26 @@
       .bindTooltip(city.name, { 
         permanent: true, 
         direction: 'bottom', // 文字在點的下方
-        className: 'city-label',
-        offset: [0, 5]      // 調整文字與點的距離
+        opacity: 1,
+        className: 'pure-text-tooltip' // 自定義類名
       });
     });
 
-    // --- 🔹 讀取路徑資料並繪製 ---
+    // 動態修改 CSS 確保無框無底色 (不更動標題中的 <style> 區塊)
+    const style = document.createElement('style');
+    style.innerHTML = `
+      .pure-text-tooltip {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: black !important;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .pure-text-tooltip:before { display: none !important; }
+    `;
+    document.head.appendChild(style);
+
     fetch(jsonUrl)
       .then(response => response.json())
       .then(data => {
@@ -103,7 +82,6 @@
         let index = 0;
         const colors = ['red', 'blue', 'green', 'red', 'blue', 'green'];
 
-        // 自動縮放至路徑範圍
         map.fitBounds(L.latLngBounds(data.map(p => [p.latitude, p.longitude])));
 
         function addNextPoint() {
@@ -115,7 +93,6 @@
           const colorIndex = Math.floor(index / 20) % colors.length;
           const markerColor = colors[colorIndex];
 
-          // 繪製路徑上的小點
           const circleMarker = L.circleMarker(latLng, {
             radius: 2,
             fillColor: markerColor,
@@ -126,3 +103,31 @@
 
           circleMarker.bindPopup(
             `<b>標籤:</b> ${point.label}<br>` +
+            `<b>海拔:</b> ${point.elevation} m<br>` +
+            `經度: ${point.longitude}<br>` +
+            `緯度: ${point.latitude}`
+          );
+
+          if (latlngs.length > 1) {
+            L.polyline(
+              [latlngs[latlngs.length - 2], latlngs[latlngs.length - 1]], 
+              {
+                color: markerColor,
+                weight: 1,
+                dashArray: '3, 3'
+              }
+            ).addTo(map);
+          }
+
+          index++;
+          setTimeout(addNextPoint, 200);
+        }
+
+        addNextPoint();
+      })
+      .catch(err => {
+        console.error('載入JSON出錯:', err);
+      });
+  </script>
+</body>
+</html>
