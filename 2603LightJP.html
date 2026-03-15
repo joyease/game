@@ -21,8 +21,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>去過日本哪些地方？</h1>
-        <p style="color:#666; font-size:20px;">日本47都道府縣,你去過哪些地方?</p>
+        <h1>日本制縣地圖</h1>
+        <p style="color:#666; font-size:20px;">日本47都道府縣,你最常去哪裡?</p>
         <input type="text" id="nickname" placeholder="輸入暱稱（如：太郎）">
         <br><button onclick="loadUserData()">🔍 查詢我的地圖</button>
         <div id="status">輸入暱稱查看旅遊記錄</div>
@@ -137,7 +137,7 @@
                         text.setAttribute('y', cy);
                         text.setAttribute('text-anchor', 'middle');
                         text.setAttribute('dominant-baseline', 'middle');
-                        text.setAttribute('font-size', '200'); // 可依照地圖大小調整
+                        text.setAttribute('font-size', '150'); // 可依照地圖大小調整
                         text.setAttribute('fill', '#333');
                         text.setAttribute('pointer-events', 'none'); // 文字不阻擋 hover
                         text.textContent = county.title;
