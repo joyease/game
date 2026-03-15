@@ -59,14 +59,15 @@
             document.getElementById('loading').style.display = 'block';
             try {
                 const response = await fetch('taiwan_counties.json');
-                countiesData = await response.json().counties;
+				const json = await response.json();
+				countiesData = json.counties;
                 
                 // 動態建立地圖path
                 const group = document.getElementById('county-group');
                 countiesData.forEach((county, index) => {
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                     path.id = county.id;
-                    path.className.baseVal = 'county';
+                    path.setAttribute("class", "county");
                     path.setAttribute('title', county.title);
                     path.setAttribute('d', county.path);
                     path.dataset.index = index;
@@ -96,7 +97,11 @@
             
             try {
                 const response = await fetch('data.json');
-                const data = await response.json();
+                if (!response.ok) {
+					throw new Error("data.json 載入失敗");
+				}
+
+				const data = await response.json();
                 const foundSequence = data.users[nickname];
                 
                 if (foundSequence && foundSequence.length === countiesData.length) {
@@ -136,6 +141,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
