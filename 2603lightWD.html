@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>我去過世界哪裡？258國家旅遊地圖</title>
+    <title>我去過世界哪裡？255國家旅遊地圖</title>
     <style>
         body { font-family: 'Microsoft JhengHei', sans-serif; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
@@ -23,7 +23,7 @@
 <body>
     <div class="container">
         <h1>🌍 我去過世界哪裡？</h1>
-        <p style="color:#666; font-size:20px;">258國家旅遊足跡，一目了然！</p>
+        <p style="color:#666; font-size:20px;">255國家旅遊足跡，一目了然！</p>
         <input type="text" id="nickname" placeholder="輸入暱稱（如：世界旅行家）">
         <br><button onclick="loadUserData()">🔍 查詢我的世界地圖</button>
         <div id="status">輸入暱稱查看全球旅遊記錄</div>
@@ -66,7 +66,7 @@
                 const json = await response.json();
                 countriesData = json.countries;
                 
-                // 🔥 動態建立258個國家path
+                // 🔥 動態建立255個國家path
                 const group = document.getElementById('country-group');
                 for(let i = 0; i < countriesData.length; i++) {
                     const country = countriesData[i];
@@ -114,7 +114,7 @@
                 const data = await response.json();
                 let foundSequence = data.users[nickname];
                 
-                // 🔥 自動補齊到258碼（支援短輸入）
+                // 🔥 自動補齊到255碼（支援短輸入）
                 if (foundSequence && foundSequence.length < countriesData.length) {
                     foundSequence = foundSequence.padEnd(countriesData.length, '0');
                 }
