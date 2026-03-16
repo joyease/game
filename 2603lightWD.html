@@ -61,8 +61,8 @@
             const progress = document.getElementById('progress');
             
             try {
-                progress.textContent = '📥 下載 worldnations2.json...';
-                const response = await fetch('worldnations2.json');
+                progress.textContent = '📥 下載 world_countries.json...';
+                const response = await fetch('world_countries.json');
                 const json = await response.json();
                 countriesData = json.countries;
                 
@@ -91,7 +91,7 @@
                 
             } catch (error) {
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('status').innerHTML = '❌ 無法載入 worldnations2.json，請確認檔案存在';
+                document.getElementById('status').innerHTML = '❌ 無法載入 world_countries.json，請確認檔案存在';
                 progress.textContent = '錯誤：' + error.message;
                 console.error('JSON載入錯誤:', error);
             }
