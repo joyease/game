@@ -34,6 +34,11 @@
         <svg id="map" viewBox="-50 0 1050 700" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;">
             <defs>
                 <style>
+                     /* 🌊 海水水藍色背景 */
+                   rect, circle, polygon, path:not(.country) { 
+                   fill: #4FC3F7 !important;  /* 水藍色 */
+                   stroke: none;
+                   }
                     .country { stroke: #555; stroke-width: 0.8; fill: #e0e0e0; transition: all 0.4s; cursor: pointer; }
                     .country:hover { stroke-width: 2; stroke: #000; opacity: 0.95; }
                 </style>
