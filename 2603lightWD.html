@@ -91,7 +91,7 @@
                 
             } catch (error) {
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('status').innerHTML = '❌ 無法載入 world_nations.json，請確認檔案存在';
+                document.getElementById('status').innerHTML = '❌ 無法載入 worldnations.json，請確認檔案存在';
                 progress.textContent = '錯誤：' + error.message;
                 console.error('JSON載入錯誤:', error);
             }
