@@ -61,8 +61,8 @@
             const progress = document.getElementById('progress');
             
             try {
-                progress.textContent = '📥 下載 world_nations.json...';
-                const response = await fetch('worldnations.json');
+                progress.textContent = '📥 下載 worldnations.json...';
+                const response = await fetch('worldnations2.json');
                 const json = await response.json();
                 countriesData = json.countries;
                 
