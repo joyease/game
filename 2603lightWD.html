@@ -151,20 +151,6 @@
                     const visits = parseInt(seq[i]) || 0;
                     path.style.fill = colors[visits] || '#e0e0e0';
                     path.title = `${country.title}: ${visits}次`;
-
-                    if (visits > 0 && country.center) { // 只對有去過的縣市顯示名稱
-                        const [cx, cy] = country.center;
-                        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-                        text.setAttribute('x', cx);
-                        text.setAttribute('y', cy);
-                        text.setAttribute('text-anchor', 'middle');
-                        text.setAttribute('dominant-baseline', 'middle');
-                        text.setAttribute('font-size', '20'); // 可依照地圖大小調整
-                        text.setAttribute('fill', '#333');
-                        text.setAttribute('pointer-events', 'none'); // 文字不阻擋 hover
-                        text.textContent = country.title;
-                        document.getElementById('map').appendChild(text);
-                    }
                 }
             });
         }
