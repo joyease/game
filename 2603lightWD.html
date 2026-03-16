@@ -62,7 +62,7 @@
             
             try {
                 progress.textContent = '📥 下載 world_nations.json...';
-                const response = await fetch('world_nations.json');
+                const response = await fetch('worldnations.json');
                 const json = await response.json();
                 countriesData = json.countries;
                 
