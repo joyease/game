@@ -61,7 +61,7 @@
             const progress = document.getElementById('progress');
             
             try {
-                progress.textContent = '📥 下載 worldnations.json...';
+                progress.textContent = '📥 下載 worldnations2.json...';
                 const response = await fetch('worldnations2.json');
                 const json = await response.json();
                 countriesData = json.countries;
@@ -71,12 +71,12 @@
                 for(let i = 0; i < countriesData.length; i++) {
                     const county = countriesData[i];
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    path.id = county.id;
+                    path.id = country.id;
                     path.setAttribute("class", "country");
-                    path.setAttribute('title', county.title);
-                    path.setAttribute('d', county.path);
+                    path.setAttribute('title', country.title);
+                    path.setAttribute('d', country.path);
                     path.dataset.index = i;
-                    countyElements[county.id] = path;
+                    countyElements[country.id] = path;
                     group.appendChild(path);
                     
                     // 🔥 進度顯示（每50國更新）
