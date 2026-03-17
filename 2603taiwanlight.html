@@ -2,90 +2,108 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>我去過台灣哪裡？22縣市旅遊地圖</title>
+    <title>🏝️ 我去過台灣哪裡？鄉鎮旅遊地圖</title>
     <style>
-        body { font-family: 'Microsoft JhengHei', sans-serif; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: 0 auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        h1 { color: #333; margin-bottom: 10px; }
+        body { font-family: 'Microsoft JhengHei', sans-serif; text-align: center; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%); margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        h1 { color: #d63384; margin-bottom: 10px; }
         #nickname { font-size: 28px; font-weight: bold; padding: 15px; width: 400px; border: 3px solid #ddd; border-radius: 10px; text-align: center; margin: 20px; letter-spacing: 3px; background: #f9f9f9; }
-        #nickname:focus { border-color: #4CAF50; outline: none; box-shadow: 0 0 15px rgba(76,175,80,0.3); }
-        button { font-size: 20px; padding: 15px 30px; margin: 0 10px; border: none; border-radius: 10px; cursor: pointer; background: #4CAF50; color: white; font-weight: bold; }
-        button:hover { background: #45a049; }
+        #nickname:focus { border-color: #ff6b9d; outline: none; box-shadow: 0 0 15px rgba(255,107,157,0.3); }
+        button { font-size: 20px; padding: 15px 30px; margin: 0 10px; border: none; border-radius: 10px; cursor: pointer; background: #ff6b9d; color: white; font-weight: bold; }
+        button:hover { background: #e55a8b; }
         #status { margin: 20px 0; font-size: 18px; font-weight: bold; min-height: 30px; }
-        #map { width: 100%; height: 700px; border: 3px solid #ddd; border-radius: 15px; background: #f8f9fa; margin: 20px 0; }
+        #map { width: 100%; height: 700px; border: 3px solid #ddd; border-radius: 15px; background: #f0f8ff; margin: 20px 0; }
         .legend { display: flex; justify-content: center; gap: 30px; margin: 30px 0; flex-wrap: wrap; font-size: 18px; font-weight: bold; }
         .legend-item { display: flex; align-items: center; gap: 12px; background: white; padding: 15px 25px; border-radius: 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         .legend-color { width: 40px; height: 30px; border-radius: 8px; border: 3px solid #333; }
         #loading { display: none; color: #666; font-size: 16px; }
+        #progress { margin: 10px 0; font-size: 14px; color: #666; }
+        .stats { font-size: 24px; color: #d63384; margin: 20px 0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>MySports 點亮台灣</h1>
-        <p style="color:#666; font-size:20px;">輸入暱稱查看22縣市旅遊足跡</p>
-        <input type="text" id="nickname" placeholder="輸入暱稱（如：小名）">
-        <br><button onclick="loadUserData()">🔍 查詢我的地圖</button>
-        <div id="status">輸入暱稱查看旅遊記錄</div>
-        <div id="loading">🔄 載入台灣地圖中...</div>
+        <h1>🏝️ 我去過台灣哪裡？</h1>
+        <p style="color:#666; font-size:20px;">台灣鄉鎮旅遊足跡，一目了然！</p>
+        <input type="text" id="nickname" placeholder="輸入暱稱（如：台灣通）">
+        <br><button onclick="loadUserData()">🔍 查詢我的台灣鄉鎮地圖</button>
+        <div id="status">輸入暱稱查看台灣鄉鎮旅遊記錄</div>
+        <div id="loading">🔄 載入台灣鄉鎮地圖中...</div>
+        <div id="progress"></div>
         
-        <!-- 使用JSON動態載入的台灣地圖 -->
-        <svg id="map" viewBox="0 0 14000 14000" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;">
+        <!-- 台灣鄉鎮地圖SVG -->
+        <svg id="map" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;">
             <defs>
                 <style>
-                    .county { stroke: #555; stroke-width: 1.5; fill: #999; transition: all 0.4s; cursor: pointer; }
-                    .county:hover { stroke-width: 3; stroke: #000; opacity: 0.95; }
+                    /* 🌊 台灣海水背景 */
+                    rect, circle, polygon, path:not(.town) { 
+                        fill: #e6f3ff; stroke: none;
+                    }
+                    .town { stroke: #666; stroke-width: 0.5; fill: #f0f0f0; transition: all 0.4s; cursor: pointer; }
+                    .town:hover { stroke-width: 1.5; stroke: #000; opacity: 0.9; stroke-dasharray: 2; }
                 </style>
             </defs>
-            <!-- JSON會動態插入這裡 -->
-            <g id="county-group"></g>
+            <g id="town-group"></g>
         </svg>
         
+        <div class="stats" id="stats"></div>
+        
         <div class="legend">
-            <div class="legend-item"><div class="legend-color" style="background:#999;"></div>0 (未去過)</div>
-            <div class="legend-item"><div class="legend-color" style="background:#4CAF50;"></div>1次 (綠)</div>
-            <div class="legend-item"><div class="legend-color" style="background:#FFEB3B;"></div>2次 (黃)</div>
-            <div class="legend-item"><div class="legend-color" style="background:#FF9800;"></div>3次 (橘)</div>
-            <div class="legend-item"><div class="legend-color" style="background:#F44336;"></div>≥4次 (紅)</div>
+            <div class="legend-item"><div class="legend-color" style="background:#f0f0f0;"></div>0 (未去過)</div>
+            <div class="legend-item"><div class="legend-color" style="background:#4CAF50;"></div>1次</div>
+            <div class="legend-item"><div class="legend-color" style="background:#FFEB3B;"></div>2次</div>
+            <div class="legend-item"><div class="legend-color" style="background:#FF9800;"></div>3次</div>
+            <div class="legend-item"><div class="legend-color" style="background:#F44336;"></div>4次以上</div>
         </div>
     </div>
 
     <script>
-        const colors = ['#999','#4CAF50','#FFEB3B','#FF9800','#F44336'];
-        let countiesData = [];
-        let countyElements = {};
+        const colors = ['#f0f0f0','#4CAF50','#FFEB3B','#FF9800','#F44336'];
+        let townsData = [];
+        let townElements = {};
         
-        // 🔥 啟動時載入台灣地圖JSON
+        // 🔥 載入台灣鄉鎮地圖JSON
         async function initMap() {
             document.getElementById('loading').style.display = 'block';
+            const progress = document.getElementById('progress');
+            
             try {
-                const response = await fetch('taiwan_counties.json');
-				const json = await response.json();
-				countiesData = json.counties;
+                progress.textContent = '📥 下載 tw_town2.json...';
+                const response = await fetch('tw_town2.json');
+                const json = await response.json();
+                townsData = json.countries;  // 注意：使用 countries 欄位
                 
-                // 動態建立地圖path
-                const group = document.getElementById('county-group');
-                countiesData.forEach((county, index) => {
+                // 🔥 動態建立鄉鎮path
+                const group = document.getElementById('town-group');
+                for(let i = 0; i < townsData.length; i++) {
+                    const town = townsData[i];
                     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                    path.id = county.id;
-                    path.setAttribute("class", "county");
-                    path.setAttribute('title', county.title);
-                    path.setAttribute('d', county.path);
-                    path.dataset.index = index;
-                    countyElements[county.id] = path;
+                    path.id = town.id;
+                    path.setAttribute("class", "town");
+                    path.setAttribute('title', town.title);
+                    path.setAttribute('d', town.path);
+                    path.dataset.index = i;
+                    townElements[town.id] = path;
                     group.appendChild(path);
-                });
+                    
+                    if(i % 50 === 0) {
+                        progress.textContent = `🎨 繪製中... ${i+1}/${townsData.length} 鄉鎮`;
+                    }
+                }
                 
+                progress.textContent = `✅ 台灣鄉鎮地圖載入完成！${townsData.length}個鄉鎮`;
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('status').innerHTML = `✅ 地圖載入完成！發現 ${countiesData.length} 個縣市`;
+                setTimeout(() => progress.textContent = '', 3000);
                 
             } catch (error) {
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('status').innerHTML = '❌ 無法載入 taiwan_counties.json，請確認檔案存在';
+                document.getElementById('status').innerHTML = '❌ 無法載入 tw_town2.json，請確認檔案存在';
+                progress.textContent = '錯誤：' + error.message;
                 console.error('JSON載入錯誤:', error);
             }
         }
         
-        // 🔍 查詢用戶資料
+        // 🔍 查詢用戶鄉鎮資料
         async function loadUserData() {
             const nickname = document.getElementById('nickname').value.trim();
             if (!nickname) {
@@ -93,48 +111,56 @@
                 return;
             }
             
-            document.getElementById('status').innerHTML = '🔄 載入用戶資料...';
+            document.getElementById('status').innerHTML = '🔄 載入鄉鎮旅行記錄...';
             
             try {
-                const response = await fetch('data.json');
-                if (!response.ok) {
-					throw new Error("data.json 載入失敗");
-				}
-
-				const data = await response.json();
-                const foundSequence = data.users[nickname];
+                const response = await fetch('twtowndata.json');
+                if (!response.ok) throw new Error("twtowndata.json 載入失敗");
                 
-                if (foundSequence && foundSequence.length === countiesData.length) {
+                const data = await response.json();
+                let foundSequence = data.users[nickname];
+                
+                // 🔥 自動補齊字串長度到鄉鎮數量
+                if (foundSequence && foundSequence.length < townsData.length) {
+                    foundSequence = foundSequence.padEnd(townsData.length, '0');
+                }
+                
+                if (foundSequence && foundSequence.length === townsData.length) {
                     const visitedCount = foundSequence.split('').filter(n => n !== '0').length;
-                    document.getElementById('status').innerHTML = `✅ ${nickname} 去過 ${visitedCount}/${countiesData.length} 個縣市`;
+                    const percent = ((visitedCount / townsData.length) * 100).toFixed(1);
+                    document.getElementById('status').innerHTML = 
+                        `✅ ${nickname} 去過 ${visitedCount}/${townsData.length} 鄉鎮 (${percent}%)`;
+                    document.getElementById('stats').innerHTML = 
+                        `🏆 台灣通進度：${visitedCount}鄉鎮 | 🎯 還差 ${townsData.length - visitedCount} 鄉鎮`;
                     updateMap(foundSequence);
                 } else {
-                    document.getElementById('status').innerHTML = `❌ 未找到 "${nickname}" 的資料<br>請確認 data.json 有此暱稱`;
+                    document.getElementById('status').innerHTML = `❌ 未找到 "${nickname}"<br>請確認 twtowndata.json 有此暱稱`;
+                    document.getElementById('stats').innerHTML = '';
                 }
             } catch (error) {
-                document.getElementById('status').innerHTML = '❌ 載入失敗，請確認 data.json 存在';
+                document.getElementById('status').innerHTML = '❌ 載入失敗，請確認 twtowndata.json 存在';
                 console.error('錯誤:', error);
             }
         }
         
-        // 更新地圖顏色
+        // 更新鄉鎮地圖顏色
         function updateMap(seq) {
-            countiesData.forEach((county, i) => {
-                const path = countyElements[county.id];
+            townsData.forEach((town, i) => {
+                const path = townElements[town.id];
                 if (path) {
                     const visits = parseInt(seq[i]) || 0;
-                    path.style.fill = colors[visits] || '#999';
-                    path.title = `${county.title}: ${visits}次`;
+                    path.style.fill = colors[visits] || '#f0f0f0';
+                    path.title = `${town.title}: ${visits}次`;
                 }
             });
         }
         
-        // Enter鍵觸發查詢
+        // Enter鍵觸發
         document.getElementById('nickname').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') loadUserData();
         });
         
-        // 頁面載入完成
+        // 🔥 頁面載入自動啟動
         window.onload = () => {
             initMap();
         };
