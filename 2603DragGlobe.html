@@ -62,7 +62,7 @@
     <script>
         const size = Math.min(window.innerWidth, window.innerHeight) * 0.95;
         const projection = d3.geoOrthographic()
-            .scale(size * 0.28)  // 關鍵：scale加大
+            .scale(size * 0.4)  // 關鍵：scale加大
             .translate([size / 2, size / 2])
             .clipAngle(90);
 
@@ -75,7 +75,7 @@
                 svg.selectAll("path").attr("d", path);
             }));
 
-        const visitedNames = ['Taiwan', 'Japan', 'South Korea', 'Austria', 'Australia', 'Belgium', 'Switzerland', 'China', 'Czech Republic', 'Germany', 'Estonia', 'Spain', 'Finland', 'France', 'United Kingdom', 'Hong Kong', 'Republic of Ireland', 'Italy', 'Cambodia', 'Gibralta', 'Sri Lanka', 'Macau', 'Malaysia', 'Netherlands', 'Norway', 'Portugal', 'Russia', 'Sweden','Singapore', 'Thailand', 'Tunisia', 'Turkey', 'Vatican City', 'Vietnam', 'India', 'United States of America', 'United Arab Emirates'];  // 你的去過國家
+        const visitedNames = ['Taiwan', 'Japan', 'South Korea', 'Austria', 'Australia', 'Belgium', 'Switzerland', 'China', 'Czech Republic', 'Germany', 'Estonia', 'Spain', 'Finland', 'France', 'United Kingdom', 'Hong Kong', 'Ireland', 'Italy', 'Cambodia', 'Gibralta', 'Sri Lanka', 'Macau', 'Malaysia', 'Netherlands', 'Norway', 'Portugal', 'Russia', 'Sweden','Singapore', 'Thailand', 'Tunisia', 'Turkey', 'Vatican City', 'Vietnam', 'India', 'United States of America', 'United Arab Emirates'];  // 你的去過國家
 
         d3.json("https://unpkg.com/world-atlas@2.0.2/countries-110m.json").then(world => {
             const land = topojson.feature(world, world.objects.countries);
