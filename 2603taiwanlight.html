@@ -23,8 +23,8 @@
 </head>
 <body>
     <div class="container">
-        <h1>🏝️ 我去過台灣哪裡？</h1>
-        <p style="color:#666; font-size:20px;">台灣鄉鎮旅遊足跡，一目了然！</p>
+        <h1>🏝️ 台灣368 鄉鎮走透透</h1>
+        <p style="color:#666; font-size:20px;">你在寶島的鄉鎮旅遊足跡！</p>
         <input type="text" id="nickname" placeholder="輸入暱稱（如：台灣通）">
         <br><button onclick="loadUserData()">🔍 查詢我的台灣鄉鎮地圖</button>
         <div id="status">輸入暱稱查看台灣鄉鎮旅遊記錄</div>
@@ -32,7 +32,7 @@
         <div id="progress"></div>
         
         <!-- 台灣鄉鎮地圖SVG -->
-        <svg id="map" viewBox="0 0 1500 2050" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;">
+        <svg id="map" viewBox="0 0 1500 2100" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;">
             <defs>
                 <style>
                     /* 🌊 台灣海水背景 */
@@ -50,10 +50,10 @@
         
         <div class="legend">
             <div class="legend-item"><div class="legend-color" style="background:#f0f0f0;"></div>0 (未去過)</div>
-            <div class="legend-item"><div class="legend-color" style="background:#4CAF50;"></div>1次</div>
-            <div class="legend-item"><div class="legend-color" style="background:#FFEB3B;"></div>2次</div>
-            <div class="legend-item"><div class="legend-color" style="background:#FF9800;"></div>3次</div>
-            <div class="legend-item"><div class="legend-color" style="background:#F44336;"></div>4次以上</div>
+            <div class="legend-item"><div class="legend-color" style="background:#4CAF50;"></div>1~4次</div>
+            <div class="legend-item"><div class="legend-color" style="background:#FFEB3B;"></div>5~9次</div>
+            <div class="legend-item"><div class="legend-color" style="background:#FF9800;"></div>10~19</div>
+            <div class="legend-item"><div class="legend-color" style="background:#F44336;"></div>20次以上</div>
         </div>
     </div>
 
