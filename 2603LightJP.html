@@ -25,7 +25,7 @@
         <p style="color:#666; font-size:20px;">跟朋友展示，你在日本47都道府縣的足跡!</p>
         <input type="text" id="nickname" placeholder="輸入暱稱（如：Hermann）">
         <br><button onclick="loadUserData()">🔍 查詢我的地圖</button>
-        <div id="status">不同顏色 1, 2, 3 與4次以上!</div>
+        <div id="status">不同顏色顯示到過 1, 2, 3次 與4次以上!</div>
         <div id="loading">🔄 載入日本地圖中...</div>
         
         <!-- 使用JSON動態載入的日本地圖 -->
@@ -76,7 +76,7 @@
                 });
                 
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('status').innerHTML = `✅ 地圖載入完成！發現 ${countiesData.length} 個都道府縣`;  <!-- 🔥 修改2: 顯示文字 -->
+                document.getElementById('status').innerHTML = `✅ 不同顏色顯示到過 1, 2, 3次 與4次以上各都道府縣!`;  <!-- 🔥 修改2: 顯示文字 -->
                 
             } catch (error) {
                 document.getElementById('loading').style.display = 'none';
