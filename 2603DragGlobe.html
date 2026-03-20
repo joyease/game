@@ -6,6 +6,7 @@
     <script src="https://unpkg.com/topojson@3/dist/topojson.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body { 
             background: radial-gradient(circle, #000428 0%, #004e92 70%); 
             height: 100vh; 
@@ -17,12 +18,48 @@
             align-items: center; 
             justify-content: center;
         }
+
         h1 { 
             position: absolute; top: 20px; 
             font-size: clamp(24px, 5vw, 48px); 
             text-shadow: 0 0 20px #FFD700; 
             z-index: 10;
         }
+
+        /* 左側按鈕區 */
+        #controls {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 20;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 20px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background: #FFD700;
+            color: black;
+        }
+
+        .active {
+            background: #FFD700 !important;
+            color: black !important;
+        }
+
         #worldmap { 
             flex: 1; 
             max-width: 95vw; 
@@ -31,6 +68,7 @@
             align-items: center; 
             justify-content: center;
         }
+
         #worldmap svg { 
             width: 95vmin !important; 
             height: 95vmin !important; 
@@ -39,69 +77,127 @@
             box-shadow: 0 0 100px rgba(255,215,0,0.5), inset 0 0 100px rgba(0,0,0,0.5); 
             cursor: grab; 
         }
+
         #worldmap svg:active { cursor: grabbing; }
+
         .ocean { fill: #001122; }
         .land { fill: rgba(200,200,200,0.7); stroke: rgba(255,255,255,0.3); stroke-width: 0.8px; }
         .visited { fill: #FFD700 !important; stroke: #FFA500 !important; stroke-width: 3px; filter: drop-shadow(0 0 10px #FFD700); }
+
         .land:hover { stroke-width: 3px; filter: brightness(1.3); }
+
         #info { 
-            position: absolute; bottom: 20px; 
-            font-size: clamp(16px, 3vw, 24px); 
+            position: absolute; bottom: 10px; 
+            font-size: clamp(10px, 3vw, 15px); 
             background: rgba(0,0,0,0.7); 
-            padding: 15px 25px; 
+            padding: 6px 20px; 
             border-radius: 25px; 
             backdrop-filter: blur(10px);
         }
     </style>
 </head>
+
 <body>
-    <h1>🌍 我的旅行地球儀</h1>
+    <h3>🌍 我的旅行地球儀</h3>
+
+    <!-- 左側按鈕 -->
+    <div id="controls">
+        <button class="btn active" onclick="switchPerson('Hermann')">Hermann</button>
+        <button class="btn" onclick="switchPerson('Sunny')">Sunny</button>
+        <button class="btn" onclick="switchPerson('Joe')">Joe</button>
+    </div>
+
     <div id="worldmap"></div>
     <p id="info">拖曳旋轉 | 黃金色=去過國家 | Hover查看詳情</p>
 
-    <script>
-        const size = Math.min(window.innerWidth, window.innerHeight) * 0.95;
-        const projection = d3.geoOrthographic()
-            .scale(size * 0.4)  // 關鍵：scale加大
-            .translate([size / 2, size / 2])
-            .clipAngle(90);
+<script>
+const size = Math.min(window.innerWidth, window.innerHeight) * 0.95;
 
-        const path = d3.geoPath().projection(projection);
-        const svg = d3.select("#worldmap").append("svg")
-            .attr("width", size).attr("height", size)
-            .call(d3.drag().on("drag", e => {
-                const r = projection.rotate();
-                projection.rotate([r[0] + e.dx * 0.3, Math.max(-90, Math.min(90, r[1] - e.dy * 0.3))]);
-                svg.selectAll("path").attr("d", path);
-            }));
+const projection = d3.geoOrthographic()
+    .scale(size * 0.4)
+    .translate([size / 2, size / 2])
+    .clipAngle(90);
 
-        const visitedNames = ['Taiwan', 'Japan', 'South Korea', 'Austria', 'Australia', 'Belgium', 'Switzerland', 'China', 'Czech Republic', 'Germany', 'Estonia', 'Spain', 'Finland', 'France', 'United Kingdom', 'Hong Kong', 'Ireland', 'Italy', 'Cambodia', 'Gibralta', 'Sri Lanka', 'Macau', 'Malaysia', 'Netherlands', 'Norway', 'Portugal', 'Russia', 'Sweden','Singapore', 'Thailand', 'Tunisia', 'Turkey', 'Vatican City', 'Vietnam', 'India', 'United States of America', 'United Arab Emirates'];  // 你的去過國家
+const path = d3.geoPath().projection(projection);
 
-        d3.json("https://unpkg.com/world-atlas@2.0.2/countries-110m.json").then(world => {
-            const land = topojson.feature(world, world.objects.countries);
-            
-            svg.append("path").datum({type: "Sphere"}).attr("class", "ocean").attr("d", path);
-            
-            const lands = svg.selectAll(".land").data(land.features).enter().append("path")
-                .attr("class", "land").attr("d", path);
+const svg = d3.select("#worldmap").append("svg")
+    .attr("width", size).attr("height", size)
+    .call(d3.drag().on("drag", e => {
+        const r = projection.rotate();
+        projection.rotate([r[0] + e.dx * 0.3, Math.max(-90, Math.min(90, r[1] - e.dy * 0.3))]);
+        svg.selectAll("path").attr("d", path);
+    }));
 
-            let count = 0;
-            lands.each(function(d) {
-                if (visitedNames.some(v => d.properties.name?.includes(v))) {
-                    d3.select(this).classed("visited", true); count++;
-                }
-            });
+// ===== 不同人物資料 =====
+const peopleData = {
+    Hermann: ['Taiwan','Japan','South Korea','Austria','Australia','Belgium','Switzerland','China','Czech Republic','Germany','Estonia','Spain','Finland','France','United Kingdom','Hong Kong','Ireland','Italy','Cambodia','Gibralta','Sri Lanka','Macau','Malaysia','Netherlands','Norway','Portugal','Russia','Sweden','Singapore','Thailand','Tunisia','Turkey','Vatican City','Vietnam','India','United States of America','United Arab Emirates'],
 
-            lands.on("mouseover", function(event, d) {
-                const name = d.properties.name || 'Unknown';
-                d3.select("#info").text(`${name} ${visitedNames.some(v => name.includes(v)) ? '✅去過' : '❌未去過'}`);
-            }).on("mouseout", () => {
-                d3.select("#info").text(`已去過 ${count} 國 | 拖曳探索世界`);
-            });
+    Sunny: ['Taiwan','Japan','South Korea','Austria','Australia','Belgium','Switzerland','China','Czech Republic','Germany','Estonia','Spain','Finland','France','United Kingdom','Hong Kong','Ireland','Italy','Cambodia','Gibralta','Sri Lanka','Macau','Malaysia','Netherlands','Norway','Portugal','Russia','Sweden','Singapore','Thailand','Tunisia','Turkey','Vatican City','Vietnam','India','United States of America','United Arab Emirates','Iceland'],
 
-            d3.select("#info").text(`✨ 已標記 ${count} 國！拖曳開始旅行`);
-        });
-    </script>
+    Joe: ['Taiwan', 'Brazil', 'Argentina', 'New Zealand', 'Indonesia', 'Japan','South Korea','Austria','Australia','Belgium','Switzerland','China','Czech Republic','Germany','Estonia','Spain','Finland','France','United Kingdom','Hong Kong','Ireland','Italy','Cambodia','Gibralta','Sri Lanka','Macau','Malaysia','Netherlands','Norway','Portugal','Russia','Sweden','Singapore','Thailand','Tunisia','Turkey','Vatican City','Vietnam','India','United States of America','United Arab Emirates','Denmark','Jordan','Israel', 'Morocco', 'Algeria', 'Egypt', 'South Africa', 'Madagascar', 'Philippines']
+};
+
+let currentPerson = "Hermann";
+let lands;
+
+// 切換人物
+function switchPerson(name) {
+    currentPerson = name;
+
+    d3.selectAll(".btn").classed("active", false);
+    d3.selectAll(".btn").filter(function() {
+        return this.innerText === name;
+    }).classed("active", true);
+
+    updateMap();
+}
+
+// 更新地圖顏色
+function updateMap() {
+    const visitedNames = peopleData[currentPerson];
+    let count = 0;
+
+    lands.classed("visited", function(d) {
+        const name = d.properties.name || '';
+        const isVisited = visitedNames.some(v => name.includes(v));
+        if (isVisited) count++;
+        return isVisited;
+    });
+
+    d3.select("#info").text(`✨ ${currentPerson} 已去過 ${count} 國`);
+}
+
+// 載入地圖
+d3.json("https://unpkg.com/world-atlas@2.0.2/countries-110m.json").then(world => {
+    const land = topojson.feature(world, world.objects.countries);
+
+    svg.append("path")
+        .datum({type: "Sphere"})
+        .attr("class", "ocean")
+        .attr("d", path);
+
+    lands = svg.selectAll(".land")
+        .data(land.features)
+        .enter()
+        .append("path")
+        .attr("class", "land")
+        .attr("d", path);
+
+    lands.on("mouseover", function(event, d) {
+        const name = d.properties.name || 'Unknown';
+        const visitedNames = peopleData[currentPerson];
+
+        d3.select("#info").text(
+            `${currentPerson} - ${name} ${visitedNames.some(v => name.includes(v)) ? '✅去過' : '❌未去過'}`
+        );
+    }).on("mouseout", () => {
+        updateMap();
+    });
+
+    updateMap();
+});
+</script>
+
 </body>
 </html>
 
