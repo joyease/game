@@ -128,7 +128,7 @@
 			const path = countyElements[county.id];
 				if (path) {
 					const visits = parseInt(seq[i]) || 0;
-					path.style.fill = colors[visits] || '#999';
+					path.style.fill = colors[visits] || '#227700';
 					path.title = `${county.title}: ${visits}次`;
 
 					if (visits > 0 && county.center) { // 只對有去過的縣市顯示名稱
