@@ -49,13 +49,7 @@
             box-shadow: 0 4px 32px rgba(0,0,0,0.07);
         }
 
-        .auth-logo {
-            font-size: 2rem;
-            font-weight: 900;
-            letter-spacing: -1px;
-            color: var(--ink);
-            margin-bottom: 0.25rem;
-        }
+        .auth-logo { font-size: 2rem; font-weight: 900; letter-spacing: -1px; color: var(--ink); margin-bottom: 0.25rem; }
         .auth-logo span { color: var(--accent); }
         .auth-sub { color: var(--ink-faint); font-size: 0.85rem; margin-bottom: 2rem; }
 
@@ -164,8 +158,9 @@
             font-size: 0.85rem;
             background: #fafaf8;
             resize: vertical;
-            min-height: 90px;
+            min-height: 70px;
             outline: none;
+            margin-bottom: 0.5rem;
         }
 
         .btn-save {
@@ -207,10 +202,8 @@
         .card-tag { font-size: 0.65rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 20px; background: var(--accent-soft); color: var(--accent); margin-left: 2px; }
 
         .card-meta { font-size: 0.75rem; color: var(--ink-muted); margin-bottom: 0.75rem; display: flex; flex-direction: column; gap: 4px; }
+        .card-context { font-size: 0.8rem; font-weight: 600; color: var(--accent); margin-bottom: 0.5rem; }
         .card-notes { background: var(--surface); border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 0.8rem; line-height: 1.6; }
-
-        .spinner { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 900px) { .content { grid-template-columns: 1fr; } .sidebar { position: static; } }
     </style>
@@ -242,7 +235,11 @@
                 <div class="form-section">
                     <span class="form-section-label">基本資料</span>
                     <input type="text" id="name" class="form-input" placeholder="全名（必填）">
-                    <input type="text" id="company" class="form-input" placeholder="公司 / 職稱">
+                    <input type="text" id="company" class="form-input" placeholder="公司 / 單位">
+                </div>
+                <div class="form-section">
+                    <span class="form-section-label">背景資訊 (Context)</span>
+                    <input type="text" id="context" class="form-input" placeholder="例：讀書會、某次餐敘">
                 </div>
                 <div class="form-section">
                     <span class="form-section-label">聯絡方式</span>
@@ -251,13 +248,13 @@
                 </div>
                 <div class="form-section">
                     <span class="form-section-label">分類標籤 (以逗號分隔)</span>
-                    <input type="text" id="tags" class="form-input" placeholder="例：投資, 登山">
+                    <input type="text" id="tags" class="form-input" placeholder="例：投資, 顧問">
                 </div>
                 <div class="form-section">
-                    <span class="form-section-label">記憶點備註</span>
-                    <textarea id="notes" class="form-textarea" placeholder="聊過的重點..."></textarea>
+                    <span class="form-section-label">記憶點 / 備註</span>
+                    <textarea id="notes" class="form-textarea" placeholder="想記下的細節..."></textarea>
                 </div>
-                <button class="btn-save" onclick="saveData()" id="saveBtn">儲存並備份</button>
+                <button class="btn-save" onclick="saveData()" id="saveBtn">儲存並同步</button>
             </div>
         </aside>
 
@@ -265,7 +262,7 @@
             <div class="search-row">
                 <div class="search-wrap">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="searchKeyword" placeholder="輸入關鍵字查詢" onkeydown="if(event.key==='Enter') doSearch()">
+                    <input type="text" id="searchKeyword" placeholder="搜尋姓名、公司、背景或備註" onkeydown="if(event.key==='Enter') doSearch()">
                 </div>
                 <button class="btn-search" onclick="doSearch()">查詢</button>
             </div>
@@ -281,7 +278,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAM4xA4cDFClv0a4rdDKA_VYJ7I1sA8IuU",
@@ -331,6 +328,7 @@
     window.saveData = async () => {
         const name = document.getElementById('name').value.trim();
         const company = document.getElementById('company').value.trim();
+        const context = document.getElementById('context').value.trim(); // 修正：獲取 context
         const phone = document.getElementById('phone').value.trim();
         const email = document.getElementById('email').value.trim();
         const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(Boolean);
@@ -342,27 +340,31 @@
 
         try {
             await addDoc(collection(db, 'contacts'), {
-                name, company, phone, email, tags, notes,
+                name, company, context, phone, email, tags, notes, // 修正：加入 context 儲存
                 createdAt: new Date()
             });
-            ['name','company','phone','email','tags','notes'].forEach(id => document.getElementById(id).value = '');
+            ['name','company','context','phone','email','tags','notes'].forEach(id => document.getElementById(id).value = '');
             await loadInitialData();
         } catch (e) { alert('儲存失敗：' + e.message); }
-        finally { btn.innerText = '儲存並備份'; }
+        finally { btn.innerText = '儲存並同步'; }
     };
 
     async function loadInitialData() {
         const list = document.getElementById('contactList');
         try {
-            // 簡化查詢：移除 uid 過濾，僅保留時間排序
-            const q = query(collection(db, 'contacts'), orderBy('createdAt', 'desc'));
+            // 修改點：移除 orderBy，使用最簡單的集合讀取，避免行動裝置索引問題
+            const q = collection(db, 'contacts');
             const snap = await getDocs(q);
+            
+            // 手動依照時間排序 (JavaScript 排序，不依賴資料庫索引)
             allContacts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            allContacts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            
             buildTagFilter();
             applyFilter();
         } catch (e) {
             console.error(e);
-            list.innerHTML = '<div style="color:red;padding:2rem;">讀取失敗，請確認後台 Rules 已修改並發佈。</div>';
+            list.innerHTML = '<div style="color:red;padding:2rem;">讀取失敗，請確認 Firebase Rules 是否正確。</div>';
         }
     }
 
@@ -400,7 +402,8 @@
 
         if (keyword) {
             result = result.filter(c => {
-                return [c.name, c.company, c.notes].join(' ').toLowerCase().includes(keyword);
+                // 修正：搜尋邏輯加入 context 欄位比對
+                return [c.name, c.company, c.notes, c.context].join(' ').toLowerCase().includes(keyword);
             });
         }
 
@@ -427,7 +430,7 @@
                         </div>
                         <div>${tags}</div>
                     </div>
-                    <div class="card-meta">
+                    ${item.context ? `<div class="card-context">📍 ${item.context}</div>` : ''} <div class="card-meta">
                         ${item.phone ? `<span>📞 ${item.phone}</span>` : ''}
                         ${item.email ? `<span>✉️ ${item.email}</span>` : ''}
                     </div>
