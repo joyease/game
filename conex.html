@@ -64,14 +64,14 @@
                 <span class="form-section-label">分類標籤</span>
                 <input type="text" id="tags" class="form-input" placeholder="例：同事, 台大">
 
-                <span class="form-section-label">背景資訊 (Context)</span>
+                <span class="form-section-label">背景脈絡</span>
                 <input type="text" id="context" class="form-input" placeholder="例：讀書會、三創">
                 
                 <span class="form-section-label">聯絡方式</span>
                 <input type="tel" id="phone" class="form-input" placeholder="電話">
                 <input type="email" id="email" class="form-input" placeholder="信箱">
                 
-                <span class="form-section-label">記憶點 / 備註</span>
+                <span class="form-section-label">備註/英文名</span>
                 <textarea id="notes" class="form-textarea" placeholder="想記下的細節..."></textarea>
                 
                 <button class="btn-save" onclick="saveData()" id="saveBtn">儲存資料</button>
@@ -82,7 +82,7 @@
             <div id="statsDisplay" class="stats-text">正在讀取統計資料...</div>
             <div class="search-row">
                 <div class="search-wrap">
-                    <input type="text" id="searchKeyword" placeholder="搜尋姓名、標籤、背景或備註" onkeydown="if(event.key==='Enter') doSearch()">
+                    <input type="text" id="searchKeyword" placeholder="搜尋姓名、分類、背景或備註" onkeydown="if(event.key==='Enter') doSearch()">
                 </div>
                 <button class="btn-search" onclick="doSearch()" id="searchBtn">開始查詢</button>
             </div>
