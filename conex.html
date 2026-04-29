@@ -530,7 +530,6 @@
 
     let allContacts = [];
     let activeTag = '__all__';
-    let activeKeyword = '';
 
     // ── Auth ──
     onAuthStateChanged(auth, (user) => {
@@ -646,12 +645,14 @@
 
     // ── Search ──
     window.doSearch = () => {
-        activeKeyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
         applyFilter();
     };
 
     // ── Filter & Render ──
     function applyFilter() {
+        // 每次執行都從輸入框即時讀取，避免狀態不同步
+        const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
+
         let result = allContacts;
 
         // Tag filter
@@ -660,20 +661,23 @@
         }
 
         // Keyword filter
-        if (activeKeyword) {
+        if (keyword) {
             result = result.filter(c => {
                 const blob = [c.name, c.company, c.phone, c.email, (c.tags || []).join(' '), c.context, c.notes]
                     .join(' ').toLowerCase();
-                return blob.includes(activeKeyword);
+                return blob.includes(keyword);
             });
         }
 
         renderCards(result);
 
+        // 統計文字：有篩選條件時一律顯示 shown / total，避免 0===0 誤判
         const total = allContacts.length;
         const shown = result.length;
-        document.getElementById('statsText').textContent =
-            shown === total ? `共 ${total} 位聯絡人` : `篩選結果：${shown} / ${total} 位`;
+        const isFiltered = activeTag !== '__all__' || keyword !== '';
+        document.getElementById('statsText').textContent = isFiltered
+            ? `篩選結果：${shown} / ${total} 位`
+            : `共 ${total} 位聯絡人`;
     }
 
     function renderCards(data) {
