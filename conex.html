@@ -3,273 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>人脈智慧存摺</title>
+    <title>人脈智慧存摺 (低流量版)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        :root {
-            --ink: #1a1a2e;
-            --ink-muted: #5a5a72;
-            --ink-faint: #9898aa;
-            --surface: #f5f4f0;
-            --card: #ffffff;
-            --accent: #3b5bdb;
-            --accent-soft: #eef2ff;
-            --accent-muted: #748ffc;
-            --border: #e2e1de;
-            --border-focus: #3b5bdb;
-            --danger: #e03131;
-        }
-
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background: var(--surface);
-            color: var(--ink);
-            min-height: 100vh;
-        }
-
-        /* ── Auth ── */
-        #authSection {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 2rem;
-        }
-
-        .auth-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 3rem 2.5rem;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 4px 32px rgba(0,0,0,0.07);
-        }
-
-        .auth-logo { font-size: 2rem; font-weight: 900; letter-spacing: -1px; color: var(--ink); margin-bottom: 0.25rem; }
-        .auth-logo span { color: var(--accent); }
-        .auth-sub { color: var(--ink-faint); font-size: 0.85rem; margin-bottom: 2rem; }
-
-        .field { position: relative; margin-bottom: 1rem; }
-        .field input {
-            width: 100%;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            padding: 0.8rem 1rem;
-            font-family: inherit;
-            font-size: 0.9rem;
-            color: var(--ink);
-            background: #fafaf8;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .field input:focus { border-color: var(--border-focus); background: #fff; }
-
-        .btn-primary {
-            width: 100%;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 0.9rem;
-            font-family: inherit;
-            font-size: 0.95rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        /* ── Main Layout ── */
+        :root { --ink: #1a1a2e; --ink-muted: #5a5a72; --surface: #f5f4f0; --card: #ffffff; --accent: #3b5bdb; --accent-soft: #eef2ff; --border: #e2e1de; }
+        body { font-family: 'Noto Sans TC', sans-serif; background: var(--surface); color: var(--ink); min-height: 100vh; }
         .hidden { display: none !important; }
-        #mainSection { display: flex; flex-direction: column; min-height: 100vh; }
-
-        .topbar {
-            background: var(--card);
-            border-bottom: 1px solid var(--border);
-            padding: 0 2rem;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .topbar-logo { font-size: 1.8rem; font-weight: 900; }
-        .topbar-logo span { color: var(--accent); }
-
-        .topbar-right { display: flex; align-items: center; gap: 1rem; }
-        #userWelcome { font-size: 0.8rem; color: var(--ink-faint); font-family: 'DM Mono', monospace; }
-
-        .btn-logout {
-            border: 1.5px solid var(--border);
-            background: transparent;
-            color: var(--danger);
-            border-radius: 8px;
-            padding: 0.4rem 0.9rem;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-
-        .content {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            max-width: 1300px;
-            margin: 0 auto;
-            width: 100%;
-            padding: 2rem;
-            gap: 2rem;
-        }
-
-        .sidebar { position: sticky; top: 76px; align-self: start; }
-        .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
-
-        .form-section-label {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--accent-muted);
-            margin-bottom: 0.6rem;
-            display: block;
-        }
-
-        .form-input {
-            width: 100%;
-            border: none;
-            border-bottom: 1.5px solid var(--border);
-            padding: 0.5rem 0;
-            font-size: 0.88rem;
-            background: transparent;
-            margin-bottom: 0.5rem;
-            outline: none;
-        }
-
-        .form-textarea {
-            width: 100%;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            padding: 0.7rem;
-            font-size: 0.85rem;
-            background: #fafaf8;
-            resize: vertical;
-            min-height: 70px;
-            outline: none;
-            margin-bottom: 0.5rem;
-        }
-
-        .btn-save {
-            width: 100%;
-            background: var(--ink);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            padding: 0.8rem;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 0.5rem;
-        }
-
-        /* ── Panel & Cards ── */
+        .topbar { background: var(--card); border-bottom: 1px solid var(--border); padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .content { display: grid; grid-template-columns: 320px 1fr; max-width: 1300px; margin: 0 auto; width: 100%; padding: 2rem; gap: 2rem; }
+        .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; position: sticky; top: 80px; }
+        .form-section-label { font-size: 0.9rem; font-weight: 700; color: var(--accent); margin-bottom: 0.6rem; display: block; }
+        .form-input { width: 100%; border: none; border-bottom: 1.5px solid var(--border); padding: 0.5rem 0; font-size: 0.88rem; margin-bottom: 1rem; outline: none; background: transparent; }
+        .form-textarea { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 0.7rem; font-size: 0.85rem; min-height: 80px; outline: none; margin-bottom: 1rem; }
+        .btn-save { width: 100%; background: var(--ink); color: #fff; border: none; border-radius: 10px; padding: 0.8rem; font-weight: 700; cursor: pointer; }
         .search-row { display: flex; gap: 0.75rem; margin-bottom: 1.5rem; }
         .search-wrap { position: relative; flex: 1; }
-        .search-wrap input {
-            width: 100%;
-            background: var(--card);
-            border: 1.5px solid var(--border);
-            border-radius: 12px;
-            padding: 0.75rem 1rem 0.75rem 2.75rem;
-            outline: none;
-        }
-        .search-icon { position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--ink-faint); }
-        
+        .search-wrap input { width: 100%; border: 1.5px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem; outline: none; }
         .btn-search { background: var(--accent); color: #fff; border: none; border-radius: 12px; padding: 0 1.25rem; cursor: pointer; }
-
-        #tagFilterBar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
-        .tag-filter-btn { border: 1.5px solid var(--border); background: var(--card); border-radius: 20px; padding: 0.3rem 0.85rem; font-size: 0.78rem; cursor: pointer; }
-        .tag-filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
-
         #contactList { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-        .contact-card { background: var(--card); border: 1.5px solid var(--border); border-radius: 14px; padding: 1.25rem; }
-
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
-        .card-name { font-size: 1rem; font-weight: 700; }
-        .card-tag { font-size: 0.65rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 20px; background: var(--accent-soft); color: var(--accent); margin-left: 2px; }
-
-        .card-meta { font-size: 0.75rem; color: var(--ink-muted); margin-bottom: 0.75rem; display: flex; flex-direction: column; gap: 4px; }
-        .card-context { font-size: 0.8rem; font-weight: 600; color: var(--accent); margin-bottom: 0.5rem; }
+        .contact-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; }
+        .card-name { font-size: 1rem; font-weight: 700; margin-bottom: 0.2rem; }
+        .card-company { font-size: 0.85rem; color: var(--ink-muted); margin-bottom: 0.75rem; }
+        .card-context { font-size: 0.8rem; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 0.3rem 0.6rem; border-radius: 6px; display: inline-block; margin-bottom: 0.75rem; }
+        .card-meta { font-size: 0.75rem; color: var(--ink-muted); margin-bottom: 0.75rem; line-height: 1.5; }
         .card-notes { background: var(--surface); border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 0.8rem; line-height: 1.6; }
-
-        @media (max-width: 900px) { .content { grid-template-columns: 1fr; } .sidebar { position: static; } }
+        .card-tag { font-size: 0.65rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 10px; background: #eee; margin-right: 4px; }
+        .stats-text { margin-bottom: 1rem; color: var(--ink-muted); font-weight: 700; }
+        @media (max-width: 900px) { .content { grid-template-columns: 1fr; } .form-card { position: static; } }
     </style>
 </head>
 <body>
 
 <div id="authSection">
-    <div class="auth-card">
-        <div class="auth-logo">CONEX<span>.</span>人脈</div>
-        <p class="auth-sub">登入以同步雲端人脈存摺</p>
-        <div class="field"><input type="email" id="loginEmail" placeholder="電子郵件"></div>
-        <div class="field"><input type="password" id="loginPassword" placeholder="密碼"></div>
-        <button class="btn-primary" onclick="handleLogin()" id="loginBtn">登入 / 自動註冊</button>
+    <div class="auth-card" style="background:#fff; padding:2rem; border-radius:20px; border:1px solid #ddd; max-width:400px; margin: 100px auto; text-align:center;">
+        <h2 style="margin-bottom:1.5rem">人脈智慧存摺</h2>
+        <input type="email" id="loginEmail" placeholder="電子郵件" style="width:100%; padding:0.8rem; margin-bottom:1rem; border:1px solid #ddd; border-radius:10px;">
+        <input type="password" id="loginPassword" placeholder="密碼" style="width:100%; padding:0.8rem; margin-bottom:1rem; border:1px solid #ddd; border-radius:10px;">
+        <button onclick="handleLogin()" style="width:100%; background:var(--accent); color:#fff; border:none; padding:0.9rem; border-radius:10px; font-weight:700; cursor:pointer;">登入</button>
     </div>
 </div>
 
 <div id="mainSection" class="hidden">
     <header class="topbar">
-        <div class="topbar-logo">CONEX<span>.</span>人脈存摺</div>
-        <div class="topbar-right">
-            <span id="userWelcome"></span>
-            <button class="btn-logout" onclick="handleLogout()">登出</button>
+        <div style="font-weight:900; font-size:1.5rem">CONEX<span>.</span></div>
+        <div style="display:flex; align-items:center; gap:1rem">
+            <span id="userWelcome" style="font-size:0.8rem"></span>
+            <button onclick="handleLogout()" style="cursor:pointer; border:1px solid #ddd; padding:2px 8px; border-radius:5px">登出</button>
         </div>
     </header>
 
     <div class="content">
         <aside class="sidebar">
             <div class="form-card">
-                <div class="form-section">
-                    <span class="form-section-label">基本資料</span>
-                    <input type="text" id="name" class="form-input" placeholder="全名（必填）">
-                    <input type="text" id="company" class="form-input" placeholder="公司 / 單位">
-                </div>
-                <div class="form-section">
-                    <span class="form-section-label">背景資訊 (Context)</span>
-                    <input type="text" id="context" class="form-input" placeholder="例：讀書會、某次餐敘">
-                </div>
-                <div class="form-section">
-                    <span class="form-section-label">聯絡方式</span>
-                    <input type="tel" id="phone" class="form-input" placeholder="連絡電話">
-                    <input type="email" id="email" class="form-input" placeholder="電子信箱">
-                </div>
-                <div class="form-section">
-                    <span class="form-section-label">分類標籤 (以逗號分隔)</span>
-                    <input type="text" id="tags" class="form-input" placeholder="例：投資, 顧問">
-                </div>
-                <div class="form-section">
-                    <span class="form-section-label">記憶點 / 備註</span>
-                    <textarea id="notes" class="form-textarea" placeholder="想記下的細節..."></textarea>
-                </div>
-                <button class="btn-save" onclick="saveData()" id="saveBtn">儲存並同步</button>
+                <span class="form-section-label">新增聯絡人</span>
+                <input type="text" id="name" class="form-input" placeholder="全名（必填）">
+                <input type="text" id="company" class="form-input" placeholder="公司 / 單位">
+                
+                <span class="form-section-label">分類標籤</span>
+                <input type="text" id="tags" class="form-input" placeholder="例：投資, 顧問">
+
+                <span class="form-section-label">背景資訊 (Context)</span>
+                <input type="text" id="context" class="form-input" placeholder="例：讀書會、某次餐敘">
+                
+                <span class="form-section-label">聯絡方式</span>
+                <input type="tel" id="phone" class="form-input" placeholder="電話">
+                <input type="email" id="email" class="form-input" placeholder="信箱">
+                
+                <span class="form-section-label">記憶點 / 備註</span>
+                <textarea id="notes" class="form-textarea" placeholder="想記下的細節..."></textarea>
+                
+                <button class="btn-save" onclick="saveData()" id="saveBtn">儲存資料</button>
             </div>
         </aside>
 
         <section class="panel">
+            <div id="statsDisplay" class="stats-text">正在讀取統計資料...</div>
             <div class="search-row">
                 <div class="search-wrap">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="searchKeyword" placeholder="搜尋姓名、公司、背景或備註" onkeydown="if(event.key==='Enter') doSearch()">
+                    <input type="text" id="searchKeyword" placeholder="搜尋姓名、標籤、背景或備註" onkeydown="if(event.key==='Enter') doSearch()">
                 </div>
-                <button class="btn-search" onclick="doSearch()">查詢</button>
+                <button class="btn-search" onclick="doSearch()" id="searchBtn">開始查詢</button>
             </div>
-            <div id="tagFilterBar">
-                <button class="tag-filter-btn active" data-tag="__all__" onclick="handleTagFilter(this)">全部</button>
-            </div>
-            <div style="margin-bottom:10px; font-size:0.8rem; color:gray;" id="statsText"></div>
             <div id="contactList"></div>
         </section>
     </div>
@@ -278,7 +94,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, query } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyAM4xA4cDFClv0a4rdDKA_VYJ7I1sA8IuU",
@@ -293,151 +109,102 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let allContacts = [];
-    let activeTag = '__all__';
-
     onAuthStateChanged(auth, (user) => {
         if (user) {
             document.getElementById('userWelcome').innerText = user.email;
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('mainSection').classList.remove('hidden');
-            loadInitialData();
+            loadTotalCount();
         } else {
             document.getElementById('authSection').classList.remove('hidden');
             document.getElementById('mainSection').classList.add('hidden');
         }
     });
 
-    window.handleLogin = async () => {
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        if (!email || !password) return alert('請填寫帳號與密碼');
+    async function loadTotalCount() {
         try {
-            await signInWithEmailAndPassword(auth, email, password);
-        } catch (err) {
-            if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-                try {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                } catch (e) { alert('註冊失敗：' + e.message); }
-            } else { alert('登入失敗：' + err.message); }
-        }
-    };
-
-    window.handleLogout = () => signOut(auth);
+            const snapshot = await getCountFromServer(collection(db, 'contacts'));
+            document.getElementById('statsDisplay').innerText = `📊 目前存摺共有 ${snapshot.data().count} 位聯絡人`;
+        } catch (e) { console.error(e); }
+    }
 
     window.saveData = async () => {
         const name = document.getElementById('name').value.trim();
-        const company = document.getElementById('company').value.trim();
-        const context = document.getElementById('context').value.trim(); // 修正：獲取 context
-        const phone = document.getElementById('phone').value.trim();
-        const email = document.getElementById('email').value.trim();
         const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(Boolean);
-        const notes = document.getElementById('notes').value.trim();
-        const btn = document.getElementById('saveBtn');
-
         if (!name) return alert('請輸入姓名');
-        btn.innerText = '同步中...';
-
+        
         try {
             await addDoc(collection(db, 'contacts'), {
-                name, company, context, phone, email, tags, notes, // 修正：加入 context 儲存
+                name,
+                company: document.getElementById('company').value.trim(),
+                tags,
+                context: document.getElementById('context').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                notes: document.getElementById('notes').value.trim(),
                 createdAt: new Date()
             });
-            ['name','company','context','phone','email','tags','notes'].forEach(id => document.getElementById(id).value = '');
-            await loadInitialData();
-        } catch (e) { alert('儲存失敗：' + e.message); }
-        finally { btn.innerText = '儲存並同步'; }
+            alert('儲存成功');
+            ['name','company','tags','context','phone','email','notes'].forEach(id => document.getElementById(id).value = '');
+            loadTotalCount();
+        } catch (e) { alert('儲存失敗'); }
     };
 
-    async function loadInitialData() {
-        const list = document.getElementById('contactList');
-        try {
-            // 修改點：移除 orderBy，使用最簡單的集合讀取，避免行動裝置索引問題
-            const q = collection(db, 'contacts');
-            const snap = await getDocs(q);
-            
-            // 手動依照時間排序 (JavaScript 排序，不依賴資料庫索引)
-            allContacts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-            allContacts.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-            
-            buildTagFilter();
-            applyFilter();
-        } catch (e) {
-            console.error(e);
-            list.innerHTML = '<div style="color:red;padding:2rem;">讀取失敗，請確認 Firebase Rules 是否正確。</div>';
-        }
-    }
-
-    function buildTagFilter() {
-        const bar = document.getElementById('tagFilterBar');
-        const tagSet = new Set();
-        allContacts.forEach(c => (c.tags || []).forEach(t => tagSet.add(t)));
-        bar.innerHTML = '<button class="tag-filter-btn active" data-tag="__all__" onclick="handleTagFilter(this)">全部</button>';
-        tagSet.forEach(tag => {
-            const btn = document.createElement('button');
-            btn.className = 'tag-filter-btn';
-            btn.dataset.tag = tag;
-            btn.textContent = `# ${tag}`;
-            btn.onclick = function() { handleTagFilter(this); };
-            bar.appendChild(btn);
-        });
-    }
-
-    window.handleTagFilter = (el) => {
-        document.querySelectorAll('.tag-filter-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        activeTag = el.dataset.tag;
-        applyFilter();
-    };
-
-    window.doSearch = () => applyFilter();
-
-    function applyFilter() {
+    window.doSearch = async () => {
         const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
-        let result = allContacts;
+        const list = document.getElementById('contactList');
+        const btn = document.getElementById('searchBtn');
 
-        if (activeTag !== '__all__') {
-            result = result.filter(c => (c.tags || []).includes(activeTag));
-        }
+        list.innerHTML = '<p style="color:gray; padding:2rem;">連線雲端中...</p>';
+        btn.disabled = true;
 
-        if (keyword) {
-            result = result.filter(c => {
-                // 修正：搜尋邏輯加入 context 欄位比對
-                return [c.name, c.company, c.notes, c.context].join(' ').toLowerCase().includes(keyword);
-            });
-        }
+        try {
+            const snap = await getDocs(collection(db, 'contacts'));
+            let results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-        renderCards(result);
-        document.getElementById('statsText').innerText = `共 ${result.length} 位聯絡人`;
-    }
+            if (keyword) {
+                results = results.filter(c => {
+                    const tagString = (c.tags || []).join(' ');
+                    return [c.name, c.company, c.notes, c.context, tagString].join(' ').toLowerCase().includes(keyword);
+                });
+            }
+
+            // 依照時間排序 (最新在前面)
+            results.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            
+            renderCards(results);
+            document.getElementById('statsDisplay').innerText = `🔎 搜尋結果：共 ${results.length} 位聯絡人`;
+        } catch (e) { alert('抓取失敗'); }
+        finally { btn.disabled = false; }
+    };
 
     function renderCards(data) {
         const list = document.getElementById('contactList');
-        list.innerHTML = '';
-        if (!data.length) {
-            list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:gray;">無聯絡人資料</div>';
-            return;
-        }
-
+        list.innerHTML = data.length ? '' : '<p style="color:gray; padding:2rem;">找不到符合的資料</p>';
         data.forEach(item => {
-            const tags = (item.tags || []).map(t => `<span class="card-tag">#${t}</span>`).join('');
+            const tagHtml = (item.tags || []).map(t => `<span class="card-tag">#${t}</span>`).join('');
             list.innerHTML += `
                 <div class="contact-card">
-                    <div class="card-header">
-                        <div>
-                            <div class="card-name">${item.name}</div>
-                            <div class="card-company">${item.company || '個人'}</div>
-                        </div>
-                        <div>${tags}</div>
+                    <div class="card-name">${item.name}</div>
+                    <div class="card-company">${item.company || '個人'}</div>
+                    ${item.context ? `<div class="card-context">📍 ${item.context}</div>` : ''}
+                    <div class="card-meta">
+                        ${item.phone ? `<div>📞 ${item.phone}</div>` : ''}
+                        ${item.email ? `<div>✉️ ${item.email}</div>` : ''}
                     </div>
-                    ${item.context ? `<div class="card-context">📍 ${item.context}</div>` : ''} <div class="card-meta">
-                        ${item.phone ? `<span>📞 ${item.phone}</span>` : ''}
-                        ${item.email ? `<span>✉️ ${item.email}</span>` : ''}
-                    </div>
-                    <div class="card-notes">${item.notes || '無備註'}</div>
+                    <div class="card-notes">${item.notes || ''}</div>
+                    <div style="margin-top:10px">${tagHtml}</div>
                 </div>`;
         });
     }
+
+    window.handleLogin = async () => {
+        const e = document.getElementById('loginEmail').value;
+        const p = document.getElementById('loginPassword').value;
+        try { await signInWithEmailAndPassword(auth, e, p); }
+        catch (err) { try { await createUserWithEmailAndPassword(auth, e, p); } catch(x) { alert('登入失敗'); } }
+    };
+    window.handleLogout = () => signOut(auth);
 </script>
 </body>
 </html>
