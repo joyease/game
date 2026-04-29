@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人人脈智慧管理系統</title>
+    <!-- 使用 Tailwind CSS 進行快速美化 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hidden { display: none; }
+        .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+    <!-- 1. 登入介面 -->
+    <div id="authSection" class="max-w-md mx-auto mt-24 p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-extrabold text-gray-900">CRM Login</h2>
+            <p class="text-gray-500 mt-2">請輸入您的帳號以同步雲端人脈</p>
+        </div>
+        <div class="space-y-4">
+            <input type="email" id="loginEmail" placeholder="電子郵件" class="w-full border p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
+            <input type="password" id="loginPassword" placeholder="密碼" class="w-full border p-3 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition">
+            <button onclick="handleLogin()" id="loginBtn" class="w-full bg-blue-600 text-white p-3 rounded-xl font-bold hover:bg-blue-700 transform active:scale-95 transition shadow-lg">登入 / 自動註冊</button>
+        </div>
+    </div>
+
+    <!-- 2. 主程式介面 (預設隱藏) -->
+    <div id="mainSection" class="max-w-5xl mx-auto p-4 md:p-8 hidden">
+        <!-- 頂部欄 -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h1 class="text-3xl font-black text-gray-800 tracking-tight">人脈智慧存摺</h1>
+                <p id="userWelcome" class="text-gray-500 text-sm"></p>
+            </div>
+            <button onclick="handleLogout()" class="px-4 py-2 border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition text-sm font-medium">安全登出</button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 左側：新增表單 -->
+            <div class="lg:col-span-1">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 sticky top-8">
+                    <h2 class="text-lg font-bold mb-4 text-gray-700 flex items-center">
+                        <span class="mr-2 text-blue-500">✦</span>新增聯絡夥伴
+                    </h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase">基本資料</label>
+                            <input type="text" id="name" placeholder="全名 (必填)" class="w-full border-b p-2 focus:border-blue-500 outline-none">
+                            <input type="text" id="company" placeholder="公司 / 職稱" class="w-full border-b p-2 focus:border-blue-500 outline-none mt-2">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase">分類標籤</label>
+                            <input type="text" id="tags" placeholder="例如: 投資, 登山, 潛在客戶" class="w-full border-b p-2 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase">相識背景</label>
+                            <input type="text" id="meetingContext" placeholder="時間/地點 (如: 2026論壇)" class="w-full border-b p-2 focus:border-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-400 uppercase">記憶點備註</label>
+                            <textarea id="notes" placeholder="聊過的重點或對方的興趣..." class="w-full border rounded-lg p-2 mt-1 h-32 text-sm focus:ring-1 focus:ring-blue-500 outline-none"></textarea>
+                        </div>
+                        <button onclick="saveData()" id="saveBtn" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-black transition shadow-md">儲存並備份</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：查詢與列表 -->
+            <div class="lg:col-span-2">
+                <div class="relative mb-6">
+                    <input type="text" id="searchKeyword" onkeyup="debounceSearch()" placeholder="輸入關鍵字模糊查詢 (姓名、公司、標籤、備註...)" 
+                           class="w-full bg-white border-2 border-transparent focus:border-blue-500 p-4 pl-12 rounded-2xl shadow-sm outline-none transition">
+                    <span class="absolute left-4 top-4 text-xl">🔍</span>
+                </div>
+
+                <!-- 搜尋結果 -->
+                <div id="contactList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 資料卡片動態插入 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK 模組導入 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- 1. Firebase 配置 (請替換為你的金鑰) ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- 2. 認證流程控制 ---
+        const authSection = document.getElementById('authSection');
+        const mainSection = document.getElementById('mainSection');
+        let allContacts = []; // 存儲完整清單以便前端模糊查詢
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                localStorage.setItem('isLoggedIn', 'true');
+                document.getElementById('userWelcome').innerText = `管理員: ${user.email}`;
+                showMainContent();
+            } else {
+                localStorage.removeItem('isLoggedIn');
+                showAuthContent();
+            }
+        });
+
+        function showMainContent() {
+            authSection.classList.add('hidden');
+            mainSection.classList.remove('hidden');
+            loadInitialData();
+        }
+
+        function showAuthContent() {
+            authSection.classList.remove('hidden');
+            mainSection.classList.add('hidden');
+        }
+
+        // 登入/註冊處理
+        window.handleLogin = async () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+
+            if(!email || !password) return alert("請填寫帳密");
+            btn.innerHTML = '<div class="loading-spinner mx-auto"></div>';
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                if (error.code === 'auth/user-not-found') {
+                    try {
+                        await createUserWithEmailAndPassword(auth, email, password);
+                        alert("已為您建立新帳號");
+                    } catch (e) { alert("註冊失敗: " + e.message); }
+                } else {
+                    alert("登入失敗: " + error.message);
+                }
+            }
+            btn.innerText = "登入 / 自動註冊";
+        };
+
+        window.handleLogout = () => signOut(auth);
+
+        // --- 3. 資料處理 ---
+        window.saveData = async () => {
+            const name = document.getElementById('name').value;
+            const company = document.getElementById('company').value;
+            const tags = document.getElementById('tags').value.split(',').map(t => t.trim()).filter(t => t !== "");
+            const context = document.getElementById('meetingContext').value;
+            const notes = document.getElementById('notes').value;
+            const btn = document.getElementById('saveBtn');
+
+            if(!name) return alert("請輸入姓名");
+            btn.innerText = "同步中...";
+
+            try {
+                await addDoc(collection(db, "contacts"), {
+                    name, company, tags, context, notes,
+                    uid: auth.currentUser.uid,
+                    createdAt: new Date()
+                });
+                // 清空表單
+                document.querySelectorAll('input, textarea').forEach(el => { if(el.id !== 'searchKeyword') el.value = ''; });
+                await loadInitialData(); // 刷新清單
+            } catch (e) {
+                alert("儲存失敗");
+            } finally {
+                btn.innerText = "儲存並備份";
+            }
+        };
+
+        // 載入全部資料 (僅限該使用者的 uid)
+        async function loadInitialData() {
+            const listContainer = document.getElementById('contactList');
+            listContainer.innerHTML = '<p class="col-span-full text-center text-gray-400">連線資料庫中...</p>';
+            
+            try {
+                const q = query(
+                    collection(db, "contacts"), 
+                    where("uid", "==", auth.currentUser.uid),
+                    orderBy("createdAt", "desc")
+                );
+                const querySnapshot = await getDocs(q);
+                allContacts = [];
+                querySnapshot.forEach(doc => allContacts.push({ id: doc.id, ...doc.data() }));
+                renderCards(allContacts);
+            } catch (e) {
+                console.error(e);
+                listContainer.innerHTML = '<p class="text-red-500">權限不足或讀取錯誤</p>';
+            }
+        }
+
+        // 渲染卡片到 HTML
+        function renderCards(dataArray) {
+            const listContainer = document.getElementById('contactList');
+            listContainer.innerHTML = "";
+            
+            if(dataArray.length === 0) {
+                listContainer.innerHTML = '<p class="col-span-full text-center py-20 text-gray-300 font-light text-xl">目前還沒有人脈資料<br><span class="text-sm">從左側開始新增吧！</span></p>';
+                return;
+            }
+
+            dataArray.forEach(item => {
+                listContainer.innerHTML += `
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:border-blue-300 hover:shadow-lg transition group">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition">${item.name}</h3>
+                                <p class="text-gray-500 text-xs">${item.company || '個人 / 自由職業'}</p>
+                            </div>
+                            <div class="flex flex-wrap gap-1 justify-end max-w-[100px]">
+                                ${item.tags.map(t => `<span class="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-full font-medium">#${t}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-start text-xs text-gray-600">
+                                <span class="mr-2">📍</span>
+                                <span>${item.context || '未註記地點'}</span>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg text-sm text-gray-600 leading-relaxed min-h-[50px]">
+                                ${item.notes || '<span class="text-gray-300 italic">無詳細備註</span>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- 4. 模糊搜尋邏輯 ---
+        window.debounceSearch = () => {
+            const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
+            
+            // 實作前端過濾
+            const filtered = allContacts.filter(item => {
+                const searchBlob = [
+                    item.name,
+                    item.company,
+                    item.tags.join(' '),
+                    item.context,
+                    item.notes
+                ].join(' ').toLowerCase();
+                return searchBlob.includes(keyword);
+            });
+            
+            renderCards(filtered);
+        };
+
+    </script>
+</body>
+</html>
