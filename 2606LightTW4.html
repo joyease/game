@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>我去過台灣哪裡？22縣市旅遊地圖</title>
+    <title>來運動，一起點亮22縣市</title>
     <style>
         body { font-family: 'Microsoft JhengHei', sans-serif; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0; padding: 20px; }
         .container { max-width: 1100px; margin: 0 auto; background: white; border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
@@ -22,10 +22,10 @@
 <body>
     <div class="container">
         <h1>MySports 點亮台灣</h1>
-        <p style="color:#666; font-size:20px;">輸入暱稱查看22縣市旅遊足跡</p>
-        <input type="text" id="nickname" placeholder="輸入暱稱（如：Hermann）">
-        <br><button onclick="loadUserData()">🔍 查詢我的地圖</button>
-        <div id="status">輸入暱稱查看旅遊記錄</div>
+        <p style="color:#666; font-size:20px;">輸入月份查看22縣市點亮圖</p>
+        <input type="text" id="nickname" placeholder="輸入月份（如：202604,202605, 累計...）">
+        <br><button onclick="loadUserData()">🔍 查詢地圖</button>
+        <div id="status">輸入月份查看點亮地圖</div>
         <div id="loading">🔄 載入台灣地圖中...</div>
 
         <svg id="map" viewBox="0 0 14000 14000" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;">
@@ -89,7 +89,7 @@
         async function loadUserData() {
             const nickname = document.getElementById('nickname').value.trim();
             if (!nickname) {
-                document.getElementById('status').innerHTML = '⚠️ 請輸入暱稱';
+                document.getElementById('status').innerHTML = '⚠️ 請輸入月份';
                 return;
             }
 
@@ -110,7 +110,7 @@
 
                     const visitedCount = arr.filter(n => n > 0).length;
                     document.getElementById('status').innerHTML =
-                        `✅ ${nickname} 去過 ${visitedCount}/${countiesData.length} 個縣市`;
+                        `✅ ${nickname} 已點亮 ${visitedCount}/${countiesData.length} 個縣市`;
                     updateMap(arr);
                 } else {
                     document.getElementById('status').innerHTML =
