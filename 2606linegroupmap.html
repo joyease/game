@@ -2,19 +2,40 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>群組即時地圖</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>愛跑咖 - 群組即時地圖</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <style> #map { height: 100vh; width: 100%; } body { margin: 0; } </style>
+    <style> 
+        #map { height: 100vh; width: 100%; } 
+        body { margin: 0; } 
+        /* 讓隊員名字的標籤看起來更清晰乾淨 */
+        .user-label {
+            background: white;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+    </style>
 </head>
 <body>
     <div id="map"></div>
 
     <script>
         // 貼上與 index.html 相同的 Firebase 設定
-        const firebaseConfig = { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID", storageBucket: "YOUR_STORAGE_BUCKET", messagingSenderId: "YOUR_MESSAGING_SENDER_ID", appId: "YOUR_APP_ID" };
+        const firebaseConfig = { 
+            apiKey: "YOUR_API_KEY", 
+            authDomain: "YOUR_AUTH_DOMAIN", 
+            projectId: "YOUR_PROJECT_ID", 
+            storageBucket: "YOUR_STORAGE_BUCKET", 
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", 
+            appId: "YOUR_APP_ID" 
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -31,6 +52,7 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         let userLayers = {}; // 用來儲存每個人的 Marker 和 Polyline
+        let isFirstLoad = true; // 【優化點 1】用來記錄是否為第一次載入資料
 
         // 簡單的文字轉顏色函式，確保同一個人拿到相同顏色
         function stringToColor(str) {
@@ -73,15 +95,24 @@
 
                   // 畫軌跡線
                   const polyline = L.polyline(user.points, {color: color, weight: 4}).addTo(map);
-                  // 畫最新位置標記（顯示人名）
-                  const marker = L.marker(lastPoint).addTo(map).bindPopup(user.nickname).openPopup();
+                  
+                  // 【優化點 2】將 bindPopup 改為 bindTooltip，這樣所有人的名字能同時顯示，不會互相打架遮擋
+                  const marker = L.marker(lastPoint).addTo(map)
+                                  .bindTooltip(user.nickname, { permanent: true, direction: 'top', className: 'user-label' });
 
                   userLayers[uid] = { marker, polyline };
               });
               
-              // 自動縮放地圖包覆所有人
+              // 【優化點 1】只有在第一次開啟地圖時，才自動縮放包覆所有人。
+              // 之後隊員走動更新時，不干擾管理員手動縮放地圖的操作。
               const allPoints = Object.values(groupData).flatMap(u => u.points);
-              if(allPoints.length > 0) { map.fitBounds(L.latLngBounds(allPoints)); }
+              if(allPoints.length > 0 && isFirstLoad) { 
+                  map.fitBounds(L.latLngBounds(allPoints)); 
+                  isFirstLoad = false; 
+              }
+          }, (error) => {
+              // 【優化點 3】建立錯誤監聽，方便你點擊連結直接建立複合索引
+              console.error("Firestore 監聽失敗，可能缺少 Index 索引:", error);
           });
     </script>
 </body>
