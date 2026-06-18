@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>群組即時地圖</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style> #map { height: 100vh; width: 100%; } body { margin: 0; } </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        // 貼上與 index.html 相同的 Firebase 設定
+        const firebaseConfig = { apiKey: "YOUR_API_KEY", authDomain: "YOUR_AUTH_DOMAIN", projectId: "YOUR_PROJECT_ID", storageBucket: "YOUR_STORAGE_BUCKET", messagingSenderId: "YOUR_MESSAGING_SENDER_ID", appId: "YOUR_APP_ID" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 從網址解析出 ?tripcode=xxx
+        const urlParams = new URLSearchParams(window.location.search);
+        const tripcode = urlParams.get('tripcode');
+
+        if(!tripcode) {
+            alert("網址缺少團隊編號！範例：map.html?tripcode=taiwan2026");
+        }
+
+        // 初始化 Leaflet 地圖（預設定位在台灣中部）
+        const map = L.map('map').setView([23.6, 121.0], 8);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        let userLayers = {}; // 用來儲存每個人的 Marker 和 Polyline
+
+        // 簡單的文字轉顏色函式，確保同一個人拿到相同顏色
+        function stringToColor(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) { hash = str.charCodeAt(i) + ((hash << 5) - hash); }
+            let color = '#';
+            for (let i = 0; i < 3; i++) { color += ('00' + ((hash >> (i * 8)) & 0xFF).toString(16)).slice(-2); }
+            return color;
+        }
+
+        // 監聽該團隊在 Firestore 的定位軌跡（按時間排序）
+        db.collection("locations")
+          .where("tripcode", "==", tripcode)
+          .orderBy("timestamp", "asc")
+          .onSnapshot((snapshot) => {
+              let groupData = {};
+
+              // 按人（line_uid）分組整理軌跡
+              snapshot.forEach((doc) => {
+                  const data = doc.data();
+                  if (!data.lat || !data.lng) return;
+                  if (!groupData[data.line_uid]) {
+                      groupData[data.line_uid] = { nickname: data.nickname, points: [] };
+                  }
+                  groupData[data.line_uid].points.push([data.lat, data.lng]);
+              });
+
+              // 清除舊地圖圖層重繪
+              Object.keys(userLayers).forEach(uid => {
+                  map.removeLayer(userLayers[uid].marker);
+                  map.removeLayer(userLayers[uid].polyline);
+              });
+              userLayers = {};
+
+              // 開始繪製新軌跡
+              Object.keys(groupData).forEach((uid) => {
+                  const user = groupData[uid];
+                  const color = stringToColor(uid);
+                  const lastPoint = user.points[user.points.length - 1];
+
+                  // 畫軌跡線
+                  const polyline = L.polyline(user.points, {color: color, weight: 4}).addTo(map);
+                  // 畫最新位置標記（顯示人名）
+                  const marker = L.marker(lastPoint).addTo(map).bindPopup(user.nickname).openPopup();
+
+                  userLayers[uid] = { marker, polyline };
+              });
+              
+              // 自動縮放地圖包覆所有人
+              const allPoints = Object.values(groupData).flatMap(u => u.points);
+              if(allPoints.length > 0) { map.fitBounds(L.latLngBounds(allPoints)); }
+          });
+    </script>
+</body>
+</html>
