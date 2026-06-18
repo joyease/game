@@ -12,10 +12,12 @@
         body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
         .card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 8px; background-color: #f9f9f9; }
         button { padding: 8px 15px; cursor: pointer; font-weight: bold; margin-top: 5px;}
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         input { padding: 6px; width: 90%; margin-bottom: 10px; }
         .danger { background-color: #ff4d4d; color: white; border: none; }
         .primary { background-color: #007bff; color: white; border: none; }
         .secondary { background-color: #28a745; color: white; border: none; }
+        #progress { font-size: 13px; color: #555; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -33,32 +35,35 @@
 
     <!-- 區塊二：管理面板（登入後才顯示） -->
     <div id="admin-panel" style="display: none;">
-        <p>歡迎回來，管理員！ <button onclick="logout()">登出</button></p>
+        <p>歡迎回來，<span id="admin-email-display"></span>！ <button onclick="logout()">登出</button></p>
 
         <!-- 功能 (1)：新增或覆蓋團隊 -->
         <div class="card">
             <h3>🔑 (1) 新增 / 更新團隊密碼</h3>
             <p>團隊編號 (tripcode): <input type="text" id="new-code" placeholder="例如: taiwan2026"></p>
-            <p>通行碼 (passcode): <input type="text" id="new-pass" placeholder="例如: 1234"></p>
-            <button class="secondary" onclick="addTrip()">建立 / 覆蓋團隊</button>
+            <p>通行碼 (passcode): <input type="password" id="new-pass" placeholder="例如: 1234"></p>
+            <button class="secondary" id="add-trip-btn" onclick="addTrip()">建立 / 覆蓋團隊</button>
         </div>
 
         <!-- 功能 (2)；變更團隊代碼 (保留舊數據、防 DDOS) -->
         <div class="card">
-            <h3>🔄 (2) 變更團隊代碼 (封存舊房間、保留軌跡)</h3>
+            <h3>🔄 (2) 變更團隊代碼 (連同舊軌跡資料一起轉移)</h3>
             <p>目前的團隊編號: <input type="text" id="move-old" placeholder="例如: taiwan2026"></p>
             <p>變更為新編號: <input type="text" id="move-new" placeholder="例如: taiwan2026_done"></p>
-            <button class="primary" onclick="renameTrip()">變更代碼並封存</button>
+            <button class="primary" id="rename-btn" onclick="renameTrip()">變更代碼並轉移資料</button>
             <small style="color: #666; display: block; margin-top: 5px;">
-                * 說明：這會將進行中的房間更名。原有的成員只要網頁一關掉就再也進不來（達到防 DDOS 效果），但他們之前跑出來的 GPS 軌跡資料會安全地留在資料庫中。
+                * 說明：這會將進行中的房間更名，舊代碼立即失效（達到防 DDOS 效果）。
+                所有歷史的 locations 與 members 紀錄會把 tripcode 欄位一併改成新代碼，
+                之後用新代碼即可查到完整的舊軌跡。資料量大時會分批處理，請耐心等候，過程中請勿關閉視窗。
             </small>
+            <div id="progress"></div>
         </div>
 
         <!-- 功能 (3)：刪除特定團隊所有資料 -->
         <div class="card" style="border: 1px solid #ff4d4d;">
             <h3 style="color: #ff4d4d;">🗑️ (3) 徹底刪除某團隊所有資料</h3>
             <p>要刪除的團隊編號: <input type="text" id="del-code" placeholder="例如: taiwan2026"></p>
-            <button class="danger" onclick="deleteTripData()">完全刪除所有數據 (不可逆)</button>
+            <button class="danger" id="delete-btn" onclick="deleteTripData()">完全刪除所有數據 (不可逆)</button>
         </div>
     </div>
 
@@ -76,11 +81,14 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
+        const progressBox = document.getElementById('progress');
+
         // 監聽登入狀態切換 UI
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('login-form').style.display = 'none';
                 document.getElementById('admin-panel').style.display = 'block';
+                document.getElementById('admin-email-display').innerText = user.email;
             } else {
                 document.getElementById('login-form').style.display = 'block';
                 document.getElementById('admin-panel').style.display = 'none';
@@ -98,61 +106,148 @@
         // 登出功能
         function logout() { auth.signOut(); }
 
+        // 工具函式：把陣列切成每組最多 size 筆，避免 batch 超過 Firestore 500 筆上限
+        function chunkArray(arr, size) {
+            const chunks = [];
+            for (let i = 0; i < arr.length; i += size) {
+                chunks.push(arr.slice(i, i + size));
+            }
+            return chunks;
+        }
+
+        function setButtonsDisabled(disabled) {
+            document.getElementById('add-trip-btn').disabled = disabled;
+            document.getElementById('rename-btn').disabled = disabled;
+            document.getElementById('delete-btn').disabled = disabled;
+        }
+
         // 【操作 1】新增/更新團隊
         async function addTrip() {
             const code = document.getElementById('new-code').value.trim();
             const pass = document.getElementById('new-pass').value.trim();
-            if(!code || !pass) return alert("請填寫完整欄位");
+            if (!code || !pass) return alert("請填寫完整欄位");
 
-            await db.collection("trips").doc(code).set({ passcode: pass });
-            alert(`團隊 [${code}] 建立/更新成功！`);
-            document.getElementById('new-code').value = '';
-            document.getElementById('new-pass').value = '';
+            try {
+                await db.collection("trips").doc(code).set({ passcode: pass });
+                alert(`團隊 [${code}] 建立/更新成功！`);
+                document.getElementById('new-code').value = '';
+                document.getElementById('new-pass').value = '';
+            } catch (e) {
+                console.error(e);
+                alert("操作失敗：" + e.message);
+            }
         }
 
-        // 【操作 2】變更代碼（保留數據、防範 DDOS）
+        // 【操作 2】變更代碼，並把舊的 locations / members 的 tripcode 欄位一併轉移到新代碼
         async function renameTrip() {
             const oldCode = document.getElementById('move-old').value.trim();
             const newCode = document.getElementById('move-new').value.trim();
-            if(!oldCode || !newCode) return alert("請填寫完整欄位");
+            if (!oldCode || !newCode) return alert("請填寫完整欄位");
+            if (oldCode === newCode) return alert("新舊代碼不能相同");
 
-            const oldDoc = await db.collection("trips").doc(oldCode).get();
-            if(!oldDoc.exists) return alert("找不到原有的團隊編號！");
+            try {
+                const oldDoc = await db.collection("trips").doc(oldCode).get();
+                if (!oldDoc.exists) return alert("找不到原有的團隊編號！");
 
-            // 複製密碼到新代碼文件，並刪除舊文件
-            const pass = oldDoc.data().passcode;
-            await db.collection("trips").doc(newCode).set({ passcode: pass });
-            await db.collection("trips").doc(oldCode).delete();
+                // 防呆：避免新代碼撞到別人正在使用中的房間，導致密碼被覆蓋、原本團隊被鎖出去
+                const newDocCheck = await db.collection("trips").doc(newCode).get();
+                if (newDocCheck.exists) {
+                    if (!confirm(`新代碼 [${newCode}] 已經存在且可能正在使用中！\n繼續會覆蓋它原本的密碼設定，原本使用該代碼的人會被鎖出去。\n確定要繼續嗎？`)) {
+                        return;
+                    }
+                }
 
-            alert(`代碼變更成功！舊代碼 [${oldCode}] 已失效，新代碼 [${newCode}] 已啟用。舊定位數據已成功保留。`);
-            document.getElementById('move-old').value = '';
-            document.getElementById('move-new').value = '';
+                if (!confirm(`即將把 [${oldCode}] 的所有定位與成員紀錄，連同 tripcode 欄位一起轉移到 [${newCode}]。\n資料量大時可能需要一些時間，確定繼續？`)) {
+                    return;
+                }
+
+                setButtonsDisabled(true);
+                progressBox.innerText = "讀取舊資料中...";
+
+                const pass = oldDoc.data().passcode;
+
+                // 1. 建立新代碼文件
+                await db.collection("trips").doc(newCode).set({ passcode: pass });
+
+                // 2. 撈出所有舊 locations，分批更新 tripcode 欄位
+                const locSnap = await db.collection("locations").where("tripcode", "==", oldCode).get();
+                const locChunks = chunkArray(locSnap.docs, 450); // 保留餘量，避免單個batch逼近500上限
+                for (let i = 0; i < locChunks.length; i++) {
+                    const batch = db.batch();
+                    locChunks[i].forEach(doc => batch.update(doc.ref, { tripcode: newCode }));
+                    await batch.commit();
+                    progressBox.innerText = `更新定位紀錄中... (${i + 1}/${locChunks.length} 批)`;
+                }
+
+                // 3. 撈出所有舊 members，分批更新 tripcode 欄位
+                const memSnap = await db.collection("members").where("tripcode", "==", oldCode).get();
+                const memChunks = chunkArray(memSnap.docs, 450);
+                for (let i = 0; i < memChunks.length; i++) {
+                    const batch = db.batch();
+                    memChunks[i].forEach(doc => batch.update(doc.ref, { tripcode: newCode }));
+                    await batch.commit();
+                    progressBox.innerText = `更新成員紀錄中... (${i + 1}/${memChunks.length} 批)`;
+                }
+
+                // 4. 最後刪除舊代碼，讓舊連結立即失效（防 DDOS / 防止舊使用者繼續寫入）
+                await db.collection("trips").doc(oldCode).delete();
+
+                progressBox.innerText = "";
+                alert(`代碼變更成功！舊代碼 [${oldCode}] 已失效，新代碼 [${newCode}] 已啟用，共轉移 ${locSnap.size} 筆定位紀錄與 ${memSnap.size} 筆成員紀錄。`);
+                document.getElementById('move-old').value = '';
+                document.getElementById('move-new').value = '';
+            } catch (e) {
+                console.error(e);
+                alert("操作失敗：" + e.message);
+                progressBox.innerText = "發生錯誤，請查看 Console。部分資料可能已轉移，請確認資料庫狀態。";
+            } finally {
+                setButtonsDisabled(false);
+            }
         }
 
-        // 【操作 3】徹底刪除某團隊所有資料 (trips + locations + members)
+        // 【操作 3】徹底刪除某團隊所有資料 (trips + locations + members)，分批處理避免超過500筆上限
         async function deleteTripData() {
             const code = document.getElementById('del-code').value.trim();
-            if(!code) return alert("請輸入要刪除的團隊編號");
-            
-            if(!confirm(`確定要完全刪除 [${code}] 的所有設定、成員與 GPS 定位軌跡嗎？此動作無法復原！`)) return;
+            if (!code) return alert("請輸入要刪除的團隊編號");
 
-            const batch = db.batch();
+            if (!confirm(`確定要完全刪除 [${code}] 的所有設定、成員與 GPS 定位軌跡嗎？此動作無法復原！`)) return;
 
-            // 1. 刪除房間設定
-            batch.delete(db.collection("trips").doc(code));
+            try {
+                setButtonsDisabled(true);
+                progressBox.innerText = "讀取資料中...";
 
-            // 2. 撈出所有該房間的 locations 並加入刪除隊列
-            const locSnap = await db.collection("locations").where("tripcode", "==", code).get();
-            locSnap.forEach(doc => batch.delete(doc.ref));
+                const locSnap = await db.collection("locations").where("tripcode", "==", code).get();
+                const memSnap = await db.collection("members").where("tripcode", "==", code).get();
 
-            // 3. 撈出所有該房間的 members 並加入刪除隊列
-            const memSnap = await db.collection("members").where("tripcode", "==", code).get();
-            memSnap.forEach(doc => batch.delete(doc.ref));
+                const locChunks = chunkArray(locSnap.docs, 450);
+                for (let i = 0; i < locChunks.length; i++) {
+                    const batch = db.batch();
+                    locChunks[i].forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                    progressBox.innerText = `刪除定位紀錄中... (${i + 1}/${locChunks.length} 批)`;
+                }
 
-            // 執行批量刪除
-            await batch.commit();
-            alert(`團隊 [${code}] 的所有關聯數據已徹底灰飛煙滅！`);
-            document.getElementById('del-code').value = '';
+                const memChunks = chunkArray(memSnap.docs, 450);
+                for (let i = 0; i < memChunks.length; i++) {
+                    const batch = db.batch();
+                    memChunks[i].forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                    progressBox.innerText = `刪除成員紀錄中... (${i + 1}/${memChunks.length} 批)`;
+                }
+
+                // 最後刪除房間設定本身
+                await db.collection("trips").doc(code).delete();
+
+                progressBox.innerText = "";
+                alert(`團隊 [${code}] 的所有關聯數據已徹底刪除（共 ${locSnap.size} 筆定位、${memSnap.size} 筆成員）。`);
+                document.getElementById('del-code').value = '';
+            } catch (e) {
+                console.error(e);
+                alert("操作失敗：" + e.message);
+                progressBox.innerText = "發生錯誤，請查看 Console。資料可能刪除不完全，請確認資料庫狀態。";
+            } finally {
+                setButtonsDisabled(false);
+            }
         }
     </script>
 </body>
