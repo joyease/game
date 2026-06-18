@@ -25,6 +25,11 @@
         <button id="stop-btn" onclick="stopTracking()" style="display:none; background-color: #ff4d4d; color: white;">停止發送</button>
     </div>
     <div id="status" style="margin-top: 20px; color: green; font-weight: bold;"></div>
+    <div id="map-link-container" style="margin-top: 15px; display: none;">
+    <a id="go-to-map" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+        🌐 開啟即時地圖（看隊友位置）
+    </a>
+   </div>
 
     <script>
         // 1. 貼上你在 Firebase 後台複製的專案設定資訊
@@ -85,7 +90,9 @@
             document.getElementById('start-btn').style.display = 'none';
             document.getElementById('stop-btn').style.display = 'inline-block';
             document.getElementById('status').innerText = "驗證成功！開始發送定位...";
-
+            // 動態產生帶有目前房號的地圖網址，並把按鈕顯示出來
+document.getElementById('go-to-map').href = `map.html?tripcode=${tripcode}`;
+document.getElementById('map-link-container').style.display = 'block';
             // 【優化點】對應需求 (6)：按開始時將計數歸零，允許使用者「再按一次重新發送」
             sendCount = 0; 
 
