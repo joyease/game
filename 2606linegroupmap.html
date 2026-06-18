@@ -8,10 +8,11 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <style> 
-        #map { height: 100vh; width: 100%; } 
-        body { margin: 0; } 
-        /* 讓隊員名字的標籤看起來更清晰乾淨 */
+    <style>
+        html, body { margin: 0; height: 100%; }
+        #map { height: 100vh; width: 100%; }
+
+        /* 隊員名字標籤 */
         .user-label {
             background: white;
             border: 1px solid #333;
@@ -21,20 +22,56 @@
             font-size: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
+
+        /* 右上角控制列：定位按鈕 + 最後更新時間 */
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+        #recenter-btn {
+            background: white;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        #recenter-btn:hover { background: #f0f0f0; }
+        #status-box {
+            background: rgba(255,255,255,0.9);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #333;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        #status-box.error { color: #c0392b; font-weight: bold; }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="controls">
+        <button id="recenter-btn">📍 定位到全部隊員</button>
+        <div id="status-box">尚未取得資料...</div>
+    </div>
 
     <script>
         // 貼上與 index.html 相同的 Firebase 設定
-        const firebaseConfig = { 
-            apiKey: "YOUR_API_KEY", 
-            authDomain: "YOUR_AUTH_DOMAIN", 
-            projectId: "YOUR_PROJECT_ID", 
-            storageBucket: "YOUR_STORAGE_BUCKET", 
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", 
-            appId: "YOUR_APP_ID" 
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -43,34 +80,61 @@
         const urlParams = new URLSearchParams(window.location.search);
         const tripcode = urlParams.get('tripcode');
 
-        if(!tripcode) {
+        const statusBox = document.getElementById('status-box');
+
+        if (!tripcode) {
             alert("網址缺少團隊編號！範例：map.html?tripcode=taiwan2026");
+            statusBox.textContent = "缺少 tripcode，已停止載入";
+            statusBox.classList.add('error');
+            throw new Error("Missing tripcode parameter"); // 中止後續執行，避免建立空查詢
         }
 
         // 初始化 Leaflet 地圖（預設定位在台灣中部）
         const map = L.map('map').setView([23.6, 121.0], 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        let userLayers = {}; // 用來儲存每個人的 Marker 和 Polyline
-        let isFirstLoad = true; // 【優化點 1】用來記錄是否為第一次載入資料
+        let userLayers = {};   // 每個人的 Marker 和 Polyline
+        let isFirstLoad = true;
+        let lastAllPoints = []; // 給「定位到全部隊員」按鈕用
 
-        // 簡單的文字轉顏色函式，確保同一個人拿到相同顏色
+        // 文字轉顏色，並限制亮度範圍，避免顏色太淺/太深而看不清楚
         function stringToColor(str) {
             let hash = 0;
-            for (let i = 0; i < str.length; i++) { hash = str.charCodeAt(i) + ((hash << 5) - hash); }
-            let color = '#';
-            for (let i = 0; i < 3; i++) { color += ('00' + ((hash >> (i * 8)) & 0xFF).toString(16)).slice(-2); }
-            return color;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const hue = Math.abs(hash) % 360;
+            // 固定飽和度與亮度，確保在地圖上清晰可辨
+            return `hsl(${hue}, 70%, 45%)`;
         }
 
-        // 監聽該團隊在 Firestore 的定位軌跡（按時間排序）
+        // 「定位到全部隊員」按鈕：手動觸發 fitBounds，不干擾自動更新
+        document.getElementById('recenter-btn').addEventListener('click', () => {
+            if (lastAllPoints.length > 0) {
+                map.fitBounds(L.latLngBounds(lastAllPoints));
+            } else {
+                statusBox.textContent = "目前沒有可定位的座標";
+            }
+        });
+
+        function setStatus(text, isError = false) {
+            statusBox.textContent = text;
+            statusBox.classList.toggle('error', isError);
+        }
+
+        // 只查詢最近 2 小時的資料，避免讀取過多歷史軌跡造成效能問題與成本增加
+        const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+        const cutoffTime = new Date(Date.now() - TWO_HOURS_MS);
+        // 假設 Firestore 的 timestamp 欄位是用 Firestore Timestamp 或可被 JS Date 比較的格式
+        const cutoffTimestamp = firebase.firestore.Timestamp.fromDate(cutoffTime);
+
         db.collection("locations")
           .where("tripcode", "==", tripcode)
+          .where("timestamp", ">=", cutoffTimestamp)
           .orderBy("timestamp", "asc")
           .onSnapshot((snapshot) => {
               let groupData = {};
 
-              // 按人（line_uid）分組整理軌跡
               snapshot.forEach((doc) => {
                   const data = doc.data();
                   if (!data.lat || !data.lng) return;
@@ -80,39 +144,42 @@
                   groupData[data.line_uid].points.push([data.lat, data.lng]);
               });
 
-              // 清除舊地圖圖層重繪
+              // 清除舊圖層重繪
               Object.keys(userLayers).forEach(uid => {
                   map.removeLayer(userLayers[uid].marker);
                   map.removeLayer(userLayers[uid].polyline);
               });
               userLayers = {};
 
-              // 開始繪製新軌跡
               Object.keys(groupData).forEach((uid) => {
                   const user = groupData[uid];
                   const color = stringToColor(uid);
                   const lastPoint = user.points[user.points.length - 1];
 
-                  // 畫軌跡線
-                  const polyline = L.polyline(user.points, {color: color, weight: 4}).addTo(map);
-                  
-                  // 【優化點 2】將 bindPopup 改為 bindTooltip，這樣所有人的名字能同時顯示，不會互相打架遮擋
+                  const polyline = L.polyline(user.points, { color: color, weight: 4 }).addTo(map);
+
                   const marker = L.marker(lastPoint).addTo(map)
                                   .bindTooltip(user.nickname, { permanent: true, direction: 'top', className: 'user-label' });
 
                   userLayers[uid] = { marker, polyline };
               });
-              
-              // 【優化點 1】只有在第一次開啟地圖時，才自動縮放包覆所有人。
-              // 之後隊員走動更新時，不干擾管理員手動縮放地圖的操作。
+
               const allPoints = Object.values(groupData).flatMap(u => u.points);
-              if(allPoints.length > 0 && isFirstLoad) { 
-                  map.fitBounds(L.latLngBounds(allPoints)); 
-                  isFirstLoad = false; 
+              lastAllPoints = allPoints; // 供手動定位按鈕使用
+
+              // 只有第一次載入時自動縮放包覆所有人，之後交由使用者手動按按鈕
+              if (allPoints.length > 0 && isFirstLoad) {
+                  map.fitBounds(L.latLngBounds(allPoints));
+                  isFirstLoad = false;
               }
+
+              const memberCount = Object.keys(groupData).length;
+              const now = new Date();
+              setStatus(`目前 ${memberCount} 人 · 最近2小時資料 · 更新於 ${now.toLocaleTimeString('zh-TW')}`);
           }, (error) => {
-              // 【優化點 3】建立錯誤監聽，方便你點擊連結直接建立複合索引
+              // 建立錯誤監聽，方便點擊連結直接建立複合索引
               console.error("Firestore 監聽失敗，可能缺少 Index 索引:", error);
+              setStatus("讀取失敗，請檢查 Firestore 索引或網路連線（詳見 Console）", true);
           });
     </script>
 </body>
