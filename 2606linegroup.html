@@ -235,7 +235,7 @@
         }
  
         function sendLocation(tripcode) {
-            if (sendCount >= 20) {
+            if (sendCount >= 10) {
                 stopTracking();
                 document.getElementById('status').innerText = "已自動停止（已達 20 筆上限）。若需要再發送，請再次點擊開始。";
                 return;
