@@ -237,7 +237,7 @@
         function sendLocation(tripcode) {
             if (sendCount >= 10) {
                 stopTracking();
-                document.getElementById('status').innerText = "已自動停止（已達 20 筆上限）。若需要再發送，請再次點擊開始。";
+                document.getElementById('status').innerText = "已自動停止（已達 10 筆上限）。若需要再發送，請再次點擊開始。";
                 return;
             }
  
@@ -259,7 +259,7 @@
  
                 db.collection("locations").add(payload).then(() => {
                     sendCount++;
-                    document.getElementById('status').innerText = `定位發送中... 成功發送 ${sendCount}/20 筆資料`;
+                    document.getElementById('status').innerText = `定位發送中... 成功發送 ${sendCount}/10 筆資料`;
                 }).catch((e) => {
                     console.error("寫入 locations 失敗", e);
                     document.getElementById('status').style.color = "red";
