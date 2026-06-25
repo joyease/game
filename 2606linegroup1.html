@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加入團體位置分享</title>
+    <!-- 引入 LINE LIFF 與 Firebase SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 16px; max-width: 480px; margin: 0 auto; }
+        h2 { margin-bottom: 4px; }
+        input, select { font-size: 16px; padding: 8px; width: 100%; box-sizing: border-box; margin-top: 4px; }
+        p { margin-bottom: 14px; }
+        button {
+            font-size: 16px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            margin-top: 6px;
+            cursor: pointer;
+        }
+        #start-btn { background-color: #06C755; color: white; font-weight: bold; }
+        #start-btn:disabled { background-color: #ccc; }
+        /* 新增：查看地圖按鈕，淺色系跟主要按鈕區隔開 */
+        #view-map-btn {
+            background-color: #ffffff;
+            color: #06C755;
+            border: 2px solid #06C755;
+            font-weight: bold;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h2>愛動咖團體定位回報</h2>
+    <div id="setup-form">
+        <p>團隊編號: <input type="text" id="tripcode" value="A2026"></p>
+        <p>通 行 碼: <input type="password" id="passcode" value="1234"></p>
+        <button id="start-btn" onclick="startTracking()" disabled>正在連接 LINE...</button>
+
+        <!-- 新增：查看地圖按鈕，會自動帶入目前輸入的團隊編號 -->
+        <button id="view-map-btn" onclick="openMap()">🗺️ 查看團隊地圖</button>
+    </div>
+    <div id="status" style="margin-top: 20px; color: green; font-weight: bold; white-space: pre-wrap;"></div>
+
+    <!-- 除錯區塊：問題排查完成後可以整段刪除 -->
+    <div id="debug-box" style="margin-top: 20px; padding: 10px; background: #f5f5f5; border: 1px dashed #999; font-size: 12px; color: #333; white-space: pre-wrap; font-family: monospace;"></div>
+
+    <script>
+        // ============================================
+        // ⚠️ 請把這裡換成你「地圖頁面」實際的網址
+        // 例如你之前的檔名是 2606linegroupmap.html，部署後的網址可能像：
+        // https://yourdomain.com/2606linegroupmap.html
+        // ============================================
+        const MAP_PAGE_URL = "https://joyease.github.io/game/2606linegroupmap.html";
+
+        // 1. 貼上你在 Firebase 後台複製的專案設定資訊
+        const firebaseConfig = {
+  apiKey: "AIzaSyBzFQvHH5_IqEwRcSBL6pp8u3qVaVo9tYY",
+  authDomain: "aisport-488fb.firebaseapp.com",
+  projectId: "aisport-488fb",
+  storageBucket: "aisport-488fb.firebasestorage.app",
+  messagingSenderId: "391726607277",
+  appId: "1:391726607277:web:34c9a2836153726fe24f24"
+   };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let userNickname = "匿名用戶";
+        let userUid = "";
+        let liffReady = false; // 防呆：LIFF profile 載入完成前不給按開始
+        let currentPasscode = ""; // 暫存密碼，供之後寫入 locations 時夾帶
+
+        const startBtn = document.getElementById('start-btn');
+        const debugBox = document.getElementById('debug-box');
+        const tripcodeInput = document.getElementById('tripcode');
+
+        // 新增：如果網址帶有 ?tripcode=xxx（例如從 Rich Menu 或歡迎訊息按鈕點進來），
+        // 自動把團隊編號填好，使用者只需要再輸入通行碼即可，不用手動打團隊編號。
+        (function autofillTripcodeFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const presetTripcode = urlParams.get('tripcode');
+            if (presetTripcode) {
+                tripcodeInput.value = presetTripcode;
+            }
+        })();
+
+        // 新增：查看地圖按鈕的動作。
+        // 如果使用者已經輸入了團隊編號，就直接帶入地圖網址；
+        // 如果還沒輸入，提示先輸入團隊編號。
+        function openMap() {
+            const tripcode = tripcodeInput.value.trim();
+            if (!tripcode) {
+                alert("請先輸入團隊編號，才能查看對應的地圖喔！");
+                return;
+            }
+            const targetUrl = `${MAP_PAGE_URL}?tripcode=${encodeURIComponent(tripcode)}`;
+
+            // 在 LIFF 環境中，用 liff.openWindow 開啟外部瀏覽器分頁，體驗較好；
+            // 若不在 LIFF 環境（例如直接用瀏覽器測試），則用一般開新分頁的方式。
+            if (window.liff && liff.isInClient && liff.isInClient()) {
+                liff.openWindow({ url: targetUrl, external: true });
+            } else {
+                window.open(targetUrl, '_blank');
+            }
+        }
+
+        // 除錯用：把目前要送出的資料與型別印到畫面上，方便對照 Firestore Rules
+        function logDebug(label, obj) {
+            const lines = Object.entries(obj).map(([k, v]) => `  ${k}: ${JSON.stringify(v)} (type: ${typeof v})`);
+            debugBox.innerText = `[除錯資訊] ${label}\n` + lines.join('\n');
+            console.log(`[除錯資訊] ${label}`, obj);
+        }
+
+        // 2. 初始化 LINE LIFF
+        liff.init({ liffId: "2010468773-m3vyemm3" }).then(() => {
+            if (!liff.isLoggedIn()) {
+                liff.login();
+                return;
+            }
+            return liff.getProfile().then(profile => {
+                userNickname = profile.displayName;
+                userUid = profile.userId;
+                liffReady = true;
+                startBtn.disabled = false;
+                startBtn.innerText = "✅ 確認並送出定位";
+            });
+        }).catch(err => {
+            console.error("LIFF 初始化失敗", err);
+            document.getElementById('status').innerText = "LIFF 初始化失敗，請確認從 LINE 開啟此頁面。";
+            document.getElementById('status').style.color = "red";
+        });
+
+        // 3. 驗證與送出定位邏輯（改為單次回報，不再連續發送）
+        async function startTracking() {
+            // 防呆：LIFF profile 還沒抓到就不能開始，避免 UID 空字串寫進資料庫
+            if (!liffReady || !userUid) {
+                return alert("尚未取得 LINE 個人資料，請稍候再試，或確認是否從 LINE 開啟此頁面。");
+            }
+
+            const tripcode = document.getElementById('tripcode').value.trim();
+            const passcode = document.getElementById('passcode').value.trim();
+
+            if (!tripcode || !passcode) return alert("請輸入編號與通行碼");
+
+            let tripDoc;
+            try {
+                tripDoc = await db.collection("trips").doc(tripcode).get();
+            } catch (e) {
+                console.error("讀取 trips 失敗", e);
+                return alert("無法連線驗證，請檢查網路後再試一次。\n錯誤代碼: " + e.code);
+            }
+
+            if (!tripDoc.exists) {
+                logDebug("trips 文件不存在", { 查詢的tripcode: tripcode });
+                return alert(`團隊編號「${tripcode}」不存在，請確認輸入是否正確（注意大小寫）。`);
+            }
+
+            const storedPasscode = tripDoc.data().passcode;
+
+            if (typeof storedPasscode !== 'string') {
+                logDebug("trips 的 passcode 型別異常", {
+                    tripcode: tripcode,
+                    storedPasscode: storedPasscode,
+                    storedPasscodeType: typeof storedPasscode
+                });
+                return alert(
+                    `偵測到設定錯誤：trips/${tripcode} 文件裡的 passcode 欄位型別是「${typeof storedPasscode}」，但必須是「string（文字）」。\n\n` +
+                    `請到 Firebase Console > Firestore > trips > ${tripcode}，把 passcode 欄位刪除後重新新增，新增時欄位型別務必選擇「string」。`
+                );
+            }
+
+            if (storedPasscode !== passcode) {
+                logDebug("通行碼不一致", {
+                    輸入的passcode: passcode,
+                    資料庫的passcode: storedPasscode
+                });
+                return alert("團隊編號或通行碼錯誤！");
+            }
+
+            currentPasscode = passcode;
+
+            try {
+                await db.collection("members").doc(userUid).set({
+                    tripcode: tripcode,
+                    line_uid: userUid,
+                    nickname: userNickname,
+                    join_time: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch (e) {
+                console.error("寫入 members 失敗", e);
+            }
+
+            document.getElementById('tripcode').disabled = true;
+            document.getElementById('passcode').disabled = true;
+            startBtn.disabled = true;
+            startBtn.innerText = "定位發送中...";
+            document.getElementById('status').style.color = "green";
+            document.getElementById('status').innerText = "驗證成功！正在取得並發送定位...";
+
+            sendLocation(tripcode);
+        }
+
+        // 單次發送定位（不再每隔幾分鐘重複發送，也沒有 10 筆上限）
+        function sendLocation(tripcode) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                const payload = {
+                    tripcode: tripcode,
+                    passcode: currentPasscode,
+                    line_uid: userUid,
+                    nickname: userNickname,
+                    lat: lat,
+                    lng: lng,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                logDebug("準備寫入 locations", payload);
+
+                db.collection("locations").add(payload).then(() => {
+                    document.getElementById('status').innerText = "定位已成功發送！";
+                    resetForNextSend();
+                }).catch((e) => {
+                    console.error("寫入 locations 失敗", e);
+                    document.getElementById('status').style.color = "red";
+                    document.getElementById('status').innerText =
+                        "定位寫入失敗！\n錯誤代碼: " + e.code + "\n錯誤訊息: " + e.message;
+                    resetForNextSend();
+                });
+            }, (err) => {
+                alert("無法取得 GPS 定位，請確認手機定位與瀏覽器權限已開啟。\n錯誤代碼: " + err.code);
+                resetForNextSend();
+            }, { enableHighAccuracy: true, timeout: 15000 });
+        }
+
+        // 發送完成（或失敗）後，恢復輸入欄位與按鈕，方便需要時可再次送出
+        function resetForNextSend() {
+            document.getElementById('tripcode').disabled = false;
+            document.getElementById('passcode').disabled = false;
+            startBtn.disabled = false;
+            startBtn.innerText = "✅ 確認並送出定位";
+        }
+    </script>
+</body>
+</html>
