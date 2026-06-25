@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>愛動咖 - 群組即時地圖</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        html, body { margin: 0; height: 100%; }
+        #map { height: 100vh; width: 100%; }
+
+        /* 隊員名字標籤：分兩行，第一行名字，第二行最後更新時間；左邊加一條跟路徑同色的色塊，方便對照 */
+        .user-label {
+            background: white;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 0;
+            font-size: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            text-align: center;
+            line-height: 1.3;
+            overflow: hidden;
+        }
+        .user-label .label-inner {
+            padding: 3px 6px 3px 8px;
+        }
+        .user-label .name-line {
+            font-weight: bold;
+        }
+        .user-label .time-line {
+            font-weight: normal;
+            font-size: 10px;
+            color: #555;
+        }
+
+        /* 彩色圓點 Marker：不同隊員用不同顏色，視覺上比預設藍色大頭針更好區分 */
+        .colored-marker {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 3px rgba(0,0,0,0.6);
+        }
+
+        /* 右上角控制列：定位按鈕 + 最後更新時間 */
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+        #recenter-btn {
+            background: white;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        #recenter-btn:hover { background: #f0f0f0; }
+        #status-box {
+            background: rgba(255,255,255,0.9);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #333;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        #status-box.error { color: #c0392b; font-weight: bold; }
+
+        /* 左上角：輸入團隊編號查詢地圖 */
+        #tripcode-box {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: rgba(255,255,255,0.95);
+            border-radius: 6px;
+            padding: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        #tripcode-box label {
+            font-size: 12px;
+            color: #333;
+            white-space: nowrap;
+        }
+        #tripcode-input {
+            font-size: 14px;
+            padding: 6px 8px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            width: 110px;
+        }
+        #load-btn {
+            background: #06C755;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 7px 10px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #load-btn:hover { background: #05a648; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="tripcode-box">
+        <label for="tripcode-input">團隊編號</label>
+        <input type="text" id="tripcode-input" placeholder="例如 A2026">
+        <button id="load-btn">🔍 查詢</button>
+    </div>
+    <div id="controls">
+        <button id="recenter-btn">📍 定位到全部隊員</button>
+        <div id="status-box">尚未取得資料...</div>
+    </div>
+
+    <script>
+        // 貼上與 index.html 相同的 Firebase 設定
+        const firebaseConfig = {
+  apiKey: "AIzaSyBzFQvHH5_IqEwRcSBL6pp8u3qVaVo9tYY",
+  authDomain: "aisport-488fb.firebaseapp.com",
+  projectId: "aisport-488fb",
+  storageBucket: "aisport-488fb.firebasestorage.app",
+  messagingSenderId: "391726607277",
+  appId: "1:391726607277:web:34c9a2836153726fe24f24"
+};
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 團隊編號來源優先順序：網址 ?tripcode=xxx > 預設值 A2026
+        // 使用者也可以在畫面上的輸入框直接修改、按「查詢」重新讀取別的團隊。
+        const urlParams = new URLSearchParams(window.location.search);
+        const tripcodeFromUrl = urlParams.get('tripcode');
+        const DEFAULT_TRIPCODE = "A2026";
+
+        const statusBox = document.getElementById('status-box');
+        const tripcodeInput = document.getElementById('tripcode-input');
+        const loadBtn = document.getElementById('load-btn');
+
+        tripcodeInput.value = tripcodeFromUrl || DEFAULT_TRIPCODE;
+
+        // 初始化 Leaflet 地圖（預設定位在台灣中部）
+        const map = L.map('map').setView([23.6, 121.0], 8);
+
+        // 改用簡潔的淺色底圖（CARTO Positron），減少底圖本身的顏色干擾，
+        // 讓畫面上的彩色路徑與標記更容易被看清楚。
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        let userLayers = {};   // 每個人目前畫在地圖上的 Marker 和 Polyline
+        let isFirstLoad = true;
+        let lastAllPoints = []; // 給「定位到全部隊員」按鈕用
+
+        // ---------- 顏色指派：固定一組好辨識的顏色，依出現順序分配給每個人 ----------
+        // 同一個 uid 在整個瀏覽過程中顏色固定不變，避免重新整理畫面後顏色亂跳。
+        const COLOR_PALETTE = [
+            '#e6194B', '#3cb44b', '#4363d8', '#f58231', '#911eb4',
+            '#42d4f4', '#f032e6', '#9A6324', '#000075', '#a9a9a9'
+        ];
+        let colorAssignments = {};
+        let nextColorIndex = 0;
+
+        function stringToColorFallback(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const hue = Math.abs(hash) % 360;
+            return `hsl(${hue}, 70%, 45%)`;
+        }
+
+        function getColorForUid(uid) {
+            if (colorAssignments[uid]) return colorAssignments[uid];
+            let color;
+            if (nextColorIndex < COLOR_PALETTE.length) {
+                color = COLOR_PALETTE[nextColorIndex];
+                nextColorIndex++;
+            } else {
+                // 超過固定色票數量時，用 hash 產生顏色作為備援
+                color = stringToColorFallback(uid);
+            }
+            colorAssignments[uid] = color;
+            return color;
+        }
+
+        function createColoredIconFixed(color) {
+            return L.divIcon({
+                className: '',
+                html: `<div class="colored-marker" style="background:${color};"></div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+        }
+
+        // 把 Date 轉成「時:分」文字，例如 14:23。只顯示實際時間，不換算成「幾分鐘前」。
+        function formatTime(date) {
+            if (!date) return "時間未知";
+            return date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // 組合 tooltip 內容：名字 + 最後更新時間，左邊加一條跟路徑同色的色塊方便對照
+        function buildTooltipHtml(nickname, lastUpdateDate, color) {
+            return `<div class="label-inner" style="border-left:4px solid ${color};">` +
+                   `<div class="name-line">${nickname}</div>` +
+                   `<div class="time-line">${formatTime(lastUpdateDate)}</div>` +
+                   `</div>`;
+        }
+
+        // 「定位到全部隊員」按鈕：手動觸發 fitBounds，不干擾自動更新
+        document.getElementById('recenter-btn').addEventListener('click', () => {
+            if (lastAllPoints.length > 0) {
+                map.fitBounds(L.latLngBounds(lastAllPoints));
+            } else {
+                statusBox.textContent = "目前沒有可定位的座標";
+            }
+        });
+
+        function setStatus(text, isError = false) {
+            statusBox.textContent = text;
+            statusBox.classList.toggle('error', isError);
+        }
+
+        // ---------- 路徑貼合道路：用 OSRM 的 Map Matching 服務，把原始 GPS 點對齊到最近的道路上 ----------
+        // 註：這裡使用 OSRM 公開示範伺服器（router.project-osrm.org），免費、不需金鑰，
+        // 但屬於公用測試服務，僅適合中小流量的展示用途。如果之後人數變多、更新頻繁，
+        // 建議改用自己架設的 OSRM 伺服器或付費的地圖比對 API（例如 Mapbox Map Matching），
+        // 避免被公用伺服器限流。
+
+        let routeCache = {}; // uid -> { signature, latlngs }
+
+        // 用「點數 + 最後一筆座標與時間」當作簡易特徵值，判斷這個人的路徑有沒有更新，
+        // 沒更新就不用重新呼叫貼路服務，省下流量也比較不會被限流。
+        function pointsSignature(points) {
+            if (points.length === 0) return "";
+            const last = points[points.length - 1];
+            return `${points.length}|${last.lat.toFixed(6)},${last.lng.toFixed(6)}|${last.timestamp ? last.timestamp.getTime() : ''}`;
+        }
+
+        // OSRM match API 對單次請求的座標數有限制，太長的歷史只取最近 100 筆，
+        // 避免網址過長或請求失敗（早期的點對「目前位置」的呈現影響不大）。
+        const MAX_MATCH_POINTS = 100;
+
+        async function snapToRoad(points) {
+            if (points.length < 2) {
+                // 只有一個點，沒有路徑可言，直接回傳原始座標
+                return points.map(p => [p.lat, p.lng]);
+            }
+
+            const trimmed = points.length > MAX_MATCH_POINTS
+                ? points.slice(points.length - MAX_MATCH_POINTS)
+                : points;
+
+            const coordsStr = trimmed.map(p => `${p.lng},${p.lat}`).join(';');
+            const timestampsStr = trimmed
+                .map(p => Math.floor((p.timestamp ? p.timestamp.getTime() : Date.now()) / 1000))
+                .join(';');
+
+            const url = `https://router.project-osrm.org/match/v1/driving/${coordsStr}` +
+                         `?geometries=geojson&overview=full&timestamps=${timestampsStr}`;
+
+            try {
+                const resp = await fetch(url);
+                const data = await resp.json();
+                if (data.code === 'Ok' && data.matchings && data.matchings.length > 0) {
+                    let latlngs = [];
+                    data.matchings.forEach(m => {
+                        const seg = m.geometry.coordinates.map(c => [c[1], c[0]]); // [lng,lat] -> [lat,lng]
+                        latlngs = latlngs.concat(seg);
+                    });
+                    return latlngs;
+                }
+            } catch (e) {
+                console.error("OSRM 路徑比對失敗，改用原始直線座標", e);
+            }
+
+            // 比對失敗（例如離道路太遠、服務忙線等）時，退回原本的直線連接，避免畫面整段消失
+            return trimmed.map(p => [p.lat, p.lng]);
+        }
+
+        // 針對一個人，取得（必要時才重新計算）貼路後的座標
+        async function getSnappedPathForUser(uid, points) {
+            const sig = pointsSignature(points);
+            const cached = routeCache[uid];
+            if (cached && cached.signature === sig) {
+                return cached.latlngs;
+            }
+            const latlngs = await snapToRoad(points);
+            routeCache[uid] = { signature: sig, latlngs };
+            return latlngs;
+        }
+
+        // 只查詢最近 60 分鐘的資料，超過60分鐘沒更新的人不會出現在地圖上
+        const SIXTY_MIN_MS = 60 * 60 * 1000;
+
+        let unsubscribeListener = null; // 目前這個 tripcode 的 Firestore 監聽（換團隊編號時要先取消舊的）
+
+        // 開始（或切換）監聽某個團隊編號的位置資料。
+        // 換團隊編號時會把畫面上舊的 marker/路徑/顏色指派/快取全部清掉，重新開始。
+        function startListening(code) {
+            if (!code) return;
+
+            // 取消舊的監聽，避免畫面同時混到兩個團隊的資料
+            if (unsubscribeListener) {
+                unsubscribeListener();
+                unsubscribeListener = null;
+            }
+
+            // 清除地圖上原有的圖層
+            Object.keys(userLayers).forEach(uid => {
+                map.removeLayer(userLayers[uid].marker);
+                map.removeLayer(userLayers[uid].polyline);
+            });
+
+            // 重置所有跟「這個團隊」相關的狀態
+            userLayers = {};
+            isFirstLoad = true;
+            lastAllPoints = [];
+            colorAssignments = {};
+            nextColorIndex = 0;
+            routeCache = {};
+
+            setStatus(`正在載入「${code}」的資料...`);
+
+            const cutoffTime = new Date(Date.now() - SIXTY_MIN_MS);
+            // 假設 Firestore 的 timestamp 欄位是用 Firestore Timestamp 或可被 JS Date 比較的格式
+            const cutoffTimestamp = firebase.firestore.Timestamp.fromDate(cutoffTime);
+
+            unsubscribeListener = db.collection("locations")
+              .where("tripcode", "==", code)
+              .where("timestamp", ">=", cutoffTimestamp)
+              .orderBy("timestamp", "asc")
+              .onSnapshot(async (snapshot) => {
+                  let groupData = {};
+
+                  snapshot.forEach((doc) => {
+                      const data = doc.data();
+                      if (!data.lat || !data.lng) return;
+                      if (!groupData[data.line_uid]) {
+                          groupData[data.line_uid] = { nickname: data.nickname, points: [], lastTimestamp: null };
+                      }
+                      const ts = data.timestamp ? data.timestamp.toDate() : null;
+                      groupData[data.line_uid].points.push({ lat: data.lat, lng: data.lng, timestamp: ts });
+                      // 因為資料是按 timestamp 升序排列，所以最後一筆 forEach 到的就是最新的一筆
+                      if (ts) {
+                          groupData[data.line_uid].lastTimestamp = ts;
+                      }
+                  });
+
+                  const uids = Object.keys(groupData);
+
+                  // 每個人各自（必要時）呼叫貼路服務，彼此互不影響；某一人失敗也不會擋住其他人顯示
+                  const snappedResults = await Promise.all(
+                      uids.map(async (uid) => {
+                          const user = groupData[uid];
+                          let latlngs;
+                          try {
+                              latlngs = await getSnappedPathForUser(uid, user.points);
+                          } catch (e) {
+                              console.error(`使用者 ${uid} 路徑貼路失敗`, e);
+                              latlngs = user.points.map(p => [p.lat, p.lng]);
+                          }
+                          return { uid, latlngs };
+                      })
+                  );
+
+                  // 清除舊圖層重繪
+                  Object.keys(userLayers).forEach(uid => {
+                      map.removeLayer(userLayers[uid].marker);
+                      map.removeLayer(userLayers[uid].polyline);
+                  });
+                  userLayers = {};
+
+                  let allPoints = [];
+
+                  snappedResults.forEach(({ uid, latlngs }) => {
+                      const user = groupData[uid];
+                      if (!user || latlngs.length === 0) return;
+
+                      const color = getColorForUid(uid);
+                      const lastRawPoint = user.points[user.points.length - 1];
+                      const markerLatLng = [lastRawPoint.lat, lastRawPoint.lng];
+
+                      const polyline = L.polyline(latlngs, { color: color, weight: 4, opacity: 0.85 }).addTo(map);
+
+                      const marker = L.marker(markerLatLng, { icon: createColoredIconFixed(color) }).addTo(map)
+                                      .bindTooltip(buildTooltipHtml(user.nickname, user.lastTimestamp, color), {
+                                          permanent: true,
+                                          direction: 'top',
+                                          className: 'user-label'
+                                      });
+
+                      userLayers[uid] = { marker, polyline };
+                      allPoints.push(markerLatLng);
+                  });
+
+                  lastAllPoints = allPoints; // 供手動定位按鈕使用
+
+                  // 只有第一次載入時自動縮放包覆所有人，之後交由使用者手動按按鈕
+                  if (allPoints.length > 0 && isFirstLoad) {
+                      map.fitBounds(L.latLngBounds(allPoints));
+                      isFirstLoad = false;
+                  }
+
+                  const memberCount = uids.length;
+                  const now = new Date();
+                  setStatus(`團隊「${code}」目前 ${memberCount} 人 · 最近60分鐘資料 · 更新於 ${now.toLocaleTimeString('zh-TW')}`);
+              }, (error) => {
+                  // 建立錯誤監聽，方便點擊連結直接建立複合索引
+                  console.error("Firestore 監聽失敗，可能缺少 Index 索引:", error);
+                  setStatus(`讀取「${code}」失敗，請檢查 Firestore 索引或網路連線（詳見 Console）`, true);
+              });
+        }
+
+        // 「查詢」按鈕：換成輸入框裡的團隊編號重新查詢
+        loadBtn.addEventListener('click', () => {
+            const code = tripcodeInput.value.trim() || DEFAULT_TRIPCODE;
+            tripcodeInput.value = code;
+            startListening(code);
+        });
+
+        // 輸入框按 Enter 也可以直接查詢，跟按按鈕一樣
+        tripcodeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                loadBtn.click();
+            }
+        });
+
+        // 頁面載入時，自動用目前輸入框的值（網址帶入或預設 A2026）開始查詢
+        startListening(tripcodeInput.value);
+    </script>
+</body>
+</html>
