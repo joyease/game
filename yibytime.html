@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>文華AI易經占卦</title>
+    <style>
+        .container { max-width: 600px; margin: auto; padding: 20px; }
+        input, select { margin: 5px; padding: 8px; }
+        #result { margin-top: 20px; padding: 15px; border: 1px solid #ddd; }
+       h2 {
+           font-size: 24px;
+           color: #6b3008;
+           }
+       h3 {
+           font-size: 18px;
+           font-style: Italic;
+           color: #220044;
+           }
+        h4 {
+           font-size: 17px;
+           color: #440044;
+           }
+        p {
+           font-size: 16px;
+           color: #000077;
+          }
+       .bigButton {
+                   width: 100px;
+                   height: 40px;
+                   font-size: 16px;
+                   }
+    </style>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-YDXYGWNXGW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-YDXYGWNXGW');
+</script>
+<body>
+ <header class="relative h-96" style="position: relative; height: 384px; overflow: hidden;">
+    <div class="absolute inset-0 bg-cover bg-center" 
+         style="position: absolute; inset: 0; background-size: cover; background-position: center; 
+                background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80');">
+    </div>
+    
+    <div class="absolute inset-0" 
+         style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);">
+    </div>
+    
+    <div class="absolute bottom-0 left-0 p-6" style="position: absolute; bottom: 0; left: 0; padding: 24px;">
+        <h1 style="color: white; font-size: 36px; font-weight: bold; margin: 0;">010:時間占卦</h1>
+    </div>
+</header>
+    <div class="container">
+    <h2> 易經時間占卦 </h2>
+    <p>最隨緣的時間占卦！心中默念「我是誰、想問什麼事」，給出是非對錯的思考方向。輸入你的生日、事件發生日期、當事人性別和事情的重要程度，然後按下「開始占卦」！！</p>
+    <p>心裡有事？來，讓AI給你一個小提示！</p>   
+    <h3> Ready？開始體驗！ </h3>
+    <!-- 輸入表單 -->
+ <div>
+ <ul>
+        <li><label>您的出生日期：</label>
+        <input type="date" id="birthDate" required></li>
+        
+        <li><label>事發(或今天)日期：</label>
+        <input type="date" id="eventDate" required></li>
+        
+        <li><label>您的性別：</label>
+        <select id="gender">
+            <option value="1">男</option>
+            <option value="0">女</option>
+        </select></li>
+        
+        <li><label>對您的重要度（0-9）：</label>
+        <input type="number" id="importance" min="0" max="9" required></li>
+  </ul>    
+        <button type="submit" class="bigButton" onclick="calculateHexagram()">開始占卦</button>
+   </div>
+
+    <!-- 顯示結果 -->
+    <div id="result" style="display:none;">
+        <h4>####占卦結果####</h4>
+        <br><img id="aiImage" src="" style="max-width:300px;">
+        <p>卦序：<span id="hexagramOrder"></span></p>
+        <p>卦象：<span id="hexagramSymbol"></span></p>
+        <p>卦名：<span id="hexagramName"></span></p>
+        <p>卦意：<span id="hexagramMeaning"></span></p>
+        <p>三國故事：<span id="story"></span></p>
+        <p> ================== </p>
+        <h4>想想，這幅畫、這個故事</h4>
+        <p>或許，正悄悄呼應著你的心情呢？</p>
+        <p>你可以將疑問、卦名、卦意、畫作與三國故事貼到 ChatGPT 等 AI 工具，請它協助你激發靈感。也許你的問題，就藏在某句卦辭或故事轉折的瞬間。每個心結，都是等待被理解的旅程；願這幅畫與故事，成為你前行路上的微光。</p>
+     <h4>本網站不留存個資，若有需要，請自行截圖保存。</h4>
+
+</div>
+    </div>
+</div>
+
+<script>
+    // 六十四卦資料庫
+let hexagrams = [];
+fetch('https://raw.githubusercontent.com/aidusu/3kingdom/main/hexagrams.json')
+  .then(response => response.json())
+  .then(data => {
+    hexagrams = data;
+    console.log('卦象資料載入完成', hexagrams);
+  })
+  .catch(error => {
+    console.error('讀取 JSON 失敗:', error);
+  });     
+  
+    // 計算卦象函式
+    function calculateHexagram() {
+        // 提取輸入值
+        const birth = new Date(document.getElementById('birthDate').value);
+        const event = new Date(document.getElementById('eventDate').value);
+        const gender = parseInt(document.getElementById('gender').value);
+        const importance = parseInt(document.getElementById('importance').value);
+        const randomCode = Math.floor(Math.random() * 101); // 0~100 的整數
+        // 計算總和
+        const sum = birth.getFullYear() + (birth.getMonth()+1) + birth.getDate() + event.getFullYear() + (event.getMonth()+1) + event.getDate() + gender + importance + randomCode;
+
+        // 取得卦序（1-64）
+        const hexagramIndex = (sum % 64) || 64; 
+
+      // 顯示結果
+        const result = hexagrams.find(h => h.order === hexagramIndex); 
+        document.getElementById('result').style.display = 'block';
+        document.getElementById('hexagramOrder').textContent = hexagramIndex;
+        document.getElementById('hexagramSymbol').textContent = result.symbol;
+        document.getElementById('hexagramName').textContent = result.name;
+        document.getElementById('hexagramMeaning').textContent = result.meaning;
+        document.getElementById('story').textContent = result.story;
+        document.getElementById('aiImage').src = result.image;
+}
+</script>
+</body>
+</html>
