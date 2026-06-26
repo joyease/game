@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>易經數位占卦</title>
+    <style>
+        body { font-family: 'Microsoft JhengHei', sans-serif; max-width: 800px; margin: 20px auto; padding: 20px }
+        .container { border: 2px solid #8B4513; border-radius: 10px; padding: 20px; background: #FFF8DC }
+        .row { display: flex; margin: 10px 0; gap: 15px; flex-wrap: wrap }
+        h2 {
+            font-size: 24px;
+            color: #6b3008;
+           }
+         h3 {
+            font-size: 18px;
+            font-style: Italic;
+            color: #22077;
+         p {
+            font-size: 16px;
+            color: #000077;
+            }
+        select { padding: 5px; font-size: 16px; border: 1px solid #8B4513 }
+        button { 
+            background: #8B4513; color: white; padding: 12px 24px; 
+            border: none; border-radius: 5px; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: scale(1.05) }
+        #result { margin-top: 20px; display: none }
+        .gua-box { background: #FAEBD7; padding: 15px; border-radius: 8px }
+        .gua-symbol { font-size: 2em; letter-spacing: 0.2em }
+    </style>
+</head>
+<body>
+ <header class="relative h-96" style="position: relative; height: 384px; overflow: hidden;">
+    <div class="absolute inset-0 bg-cover bg-center" 
+         style="position: absolute; inset: 0; background-size: cover; background-position: center; 
+                background-image: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80');">
+    </div>
+    
+    <div class="absolute inset-0" 
+         style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);">
+    </div>
+    
+    <div class="absolute bottom-0 left-0 p-6" style="position: absolute; bottom: 0; left: 0; padding: 24px;">
+        <h1 style="color: white; font-size: 36px; font-weight: bold; margin: 0;">000:金錢占卦</h1>
+    </div>
+</header>
+    <div class="container">
+        <h2>金錢卦</h2>
+        <p>最方便的自助占卦！</p>
+        <p>請準備三枚銅板，心中默念「我是誰、要問什麼事」，賦予銅板巧妙緣分。雙手搖銅板三下後拋出，圖為正面、字為反面，記下結果：三正、兩正一反、兩反一正、三反。重複此步驟共六次。完成後按下「開始占卦」按鈕，立即顯示占卦結果。 </p>
+        <h3> Ready？ 請依序選擇六次的銅板呈現結果！ </h3>
+     
+        <div id="selections">
+            <!-- 六次選擇區 -->
+            <div class="row">
+                <div>第一次：<select id="1"><option>三正面</option><option>兩正一反</option><option>兩反一正</option><option>三反面</option></select></div>
+                <div>第二次：<select id="2"><option>三正面</option><option>兩正一反</option><option>兩反一正</option><option>三反面</option></select></div>
+                <div>第三次：<select id="3"><option>三正面</option><option>兩正一反</option><option>兩反一正</option><option>三反面</option></select></div>
+                <div>第四次：<select id="4"><option>三正面</option><option>兩正一反</option><option>兩反一正</option><option>三反面</option></select></div>
+                <div>第五次：<select id="5"><option>三正面</option><option>兩正一反</option><option>兩反一正</option><option>三反面</option></select></div>
+                <div>第六次：<select id="6"><option>三正面</option><option>兩正一反</option><option>兩反一正</option><option>三反面</option></select></div>
+            </div>
+        </div>
+       <button id="startBtn" onclick="calculateGua()" disabled>開始占卦</button>
+    
+            <h4>####占卦結果####</h4>
+            <div id="result" style="display:none;">
+            <br><img id="aiImage" src="" style="max-width:300px;">
+            <p>卦序：<span id="hexagramOrder"></span></p>
+            <p>卦象：<span id="hexagramSymbol"></span></p>
+            <p>卦名：<span id="hexagramName"></span></p>
+            <p>卦意：<span id="hexagramMeaning"></span></p>
+            <p>三國故事：<span id="story"></span></p>
+            <p> ================== </p>
+            <h>想想，這幅畫、這個故事</h4>
+        <p>或許，正悄悄呼應著你的心情呢？</p>
+        <p>你可以將疑問、卦名、卦意、畫作與三國故事貼到 ChatGPT 等 AI 工具，請它協助你激發靈感。也許你的問題，就藏在某句卦辭或故事轉折的瞬間。每個心結，都是等待被理解的旅程；願這幅畫與故事，成為你前行路上的微光。</p>
+     <h4>本網站不留存個資，若有需要，請自行截圖保存。</h4>
+        </div>
+    </div>
+
+<script>
+// 六十四卦資料庫
+let hexagrams = [];
+fetch('https://raw.githubusercontent.com/aidusu/3kingdom/main/hexagrams.json')
+    .then(response => response.json())
+    .then(data => {
+        hexagrams = data;
+        console.log('卦象資料載入完成', hexagrams);
+        document.getElementById('startBtn').disabled = false; // 資料載入完才可按
+    })
+    .catch(error => {
+        alert('卦象資料載入失敗，請稍後再試');
+    });
+
+function calculateGua() {
+    let binary = "";
+    for (let i = 6; i >= 1; i--) {
+        const val = document.getElementById(i).value;
+        if (val === "三正面" || val === "兩正一反") {
+            binary += "1";
+        } else {
+            binary += "0";
+        }
+    }
+    const hexagramIndex = parseInt(binary, 2);
+    console.log('計算結果：', { binary, hexagramIndex }); // 除錯用
+
+    const result = hexagrams.find(h => h.order === hexagramIndex);
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('hexagramOrder').textContent = hexagramIndex;
+    document.getElementById('hexagramSymbol').textContent = result?.symbol || '未找到對應卦象';
+    document.getElementById('hexagramName').textContent = result?.name || '未找到對應卦象';
+    document.getElementById('hexagramMeaning').textContent = result?.meaning || '未找到對應卦象';
+    document.getElementById('story').textContent = result?.story || '未找到對應故事';
+    document.getElementById('aiImage').src = result?.image || '';
+}
+</script>
+</body>
+</html>
