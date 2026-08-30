@@ -106,7 +106,7 @@
         const travelers = {
             'Hermann': ['Taiwan', 'Japan','Poalnd', 'Hungary','Slovak','South Korea', 'Austria', 'Australia', 'Belgium', 'Switzerland', 'China', 'Czech Republic', 'Germany', 'Estonia', 'Spain', 'Finland', 'France', 'United Kingdom', 'Hong Kong', 'Ireland', 'Italy', 'Cambodia', 'Gibralta', 'Sri Lanka', 'Macau', 'Malaysia', 'Netherlands', 'Norway', 'Portugal', 'Russia', 'Sweden','Singapore', 'Thailand', 'Tunisia', 'Turkey', 'Vatican City', 'Vietnam', 'India', 'United States of America', 'United Arab Emirates'],
             'Sunny': ['Taiwan', 'Japan','Poalnd', 'Hungary','Slovak', 'South Korea', 'Austria', 'Australia', 'Belgium', 'Switzerland', 'China', 'Czech Republic', 'Germany', 'Estonia', 'Spain', 'Finland', 'France', 'United Kingdom', 'Hong Kong', 'Ireland', 'Italy', 'Cambodia', 'Gibralta', 'Macau', 'Malaysia', 'Netherlands', 'Norway', 'Portugal', 'Russia', 'Sweden','Singapore', 'Thailand', 'Tunisia', 'Turkey', 'Vatican City', 'Vietnam', 'India', 'United States of America', 'United Arab Emirates', 'Iceland'],
-            'Tom': ['Taiwan', 'Brazil', 'Argentina', 'New Zealand', 'Indonesia', 'Japan','South Korea','Austria','Australia','Belgium','Switzerland','China','Czech Republic','Germany','Estonia','Spain','Finland','France','United Kingdom','Hong Kong','Ireland','Italy','Cambodia','Gibralta','Sri Lanka','Macau','Malaysia','Netherlands','Norway','Portugal','Russia','Sweden','Singapore','Thailand','Tunisia','Turkey','Vatican City','Vietnam','India','United States of America','United Arab Emirates','Denmark','Jordan','Israel', 'Morocco', 'Algeria', 'Egypt', 'South Africa', 'Madagascar', 'Philippines']
+            'Tom': ['Taiwan', 'Argentina', 'New Zealand', 'Indonesia', 'Japan','South Korea','Austria','Australia','Belgium','Switzerland','China','Czech Republic','Germany','Estonia','Spain','Finland','France','United Kingdom','Hong Kong','Ireland','Italy','Cambodia','Sri Lanka','Macau','Malaysia','Netherlands','Norway','Portugal','Russia','Sweden','Singapore','Thailand','Turkey','Vatican City','Vietnam','India','United States of America','United Arab Emirates','Denmark','Jordan','Israel', 'Morocco', 'Algeria', 'Egypt', 'South Africa', 'Madagascar', 'Philippines']
 		};
 
         const size = Math.min(window.innerWidth, window.innerHeight) * 0.95;
@@ -155,9 +155,9 @@
                 }
             });
             
-            // 更新標題和資訊
+            // 更新標題和資訊  用40 替換 ${count}
             d3.select("h1").text(`🌍 ${traveler} 的旅行地球儀`);
-            d3.select("#info").text(`${traveler} 已去過 ${count} 國 | 拖曳探索世界`);
+            d3.select("#info").text(`${traveler} 遊歷 40 國 | 探索世界`);
         }
 
         d3.json("https://unpkg.com/world-atlas@2.0.2/countries-110m.json").then(world => {
@@ -178,7 +178,7 @@
                 d3.select("#info").text(`${name} ${visited ? '✅' + currentTraveler + '去過' : '❌未去過'} (${currentTraveler})`);
             }).on("mouseout", () => {
                 const count = travelers[currentTraveler].length;
-                d3.select("#info").text(`${currentTraveler} 已去過 ${count} 國 | 拖曳探索世界`);
+                d3.select("#info").text(`${currentTraveler} 遊歷 40 國 | 探索世界`);
             });
         });
     </script>
